@@ -13,3 +13,9 @@ $_lang['simplecart.methods.payment.stripe.property_secret_key.desc'] = "Enter th
 
 $_lang['simplecart.methods.payment.stripe.property_publishable_key'] = "Publishable Key";
 $_lang['simplecart.methods.payment.stripe.property_publishable_key.desc'] = "Enter the Publishable Key from your Stripe account. This can be both a test or live API Key.";
+
+$_lang['simplecart.methods.payment.stripe.property_cart_tpl'] = "Stripe Cart Tpl";
+$_lang['simplecart.methods.payment.stripe.property_cart_tpl.desc'] = "Enter the name of a chunk to use for the various Stripe fields in the Cart/Checkout. ";
+
+$_lang['simplecart.methods.payment.stripe.property_cart_footer_tpl'] = "Stripe Footer Tpl";
+$_lang['simplecart.methods.payment.stripe.property_cart_footer_tpl.desc'] = "Enter the name of a chunk to use for the Stripe footer, which contains the Stripe.js library and the client-side logic for the payment.";

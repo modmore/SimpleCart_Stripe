@@ -1,4 +1,4 @@
 ++ Stripe Gateway for SimpleCart v1.0.0-rc1
-++ Released on TBD
+++ Released on 2015-06-19
 +++++++++++++++++++++++++++++++++++++++++++
 - Initial release
