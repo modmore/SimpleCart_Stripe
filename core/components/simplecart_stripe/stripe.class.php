@@ -38,10 +38,10 @@ class SimpleCartStripePaymentGateway extends SimpleCartGateway {
 
         // Get the description
         $content = $this->modx->lexicon('simplecart.methods.yourorderat');
-        /** @var modChunk $chunk */
         $chunk = $this->modx->newObject('modChunk');
         $chunk->setCacheable(false);
-        $description = $chunk->process($content);
+        $chunk->setContent($content);
+        $description = $chunk->process();
 
         try {
             $charge = \Stripe\Charge::create(array(

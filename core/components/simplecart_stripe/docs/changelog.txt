@@ -1,3 +1,5 @@
+- Fix description not being processed properly
+
 ++ Stripe Gateway for SimpleCart v1.0.0-rc1
 ++ Released on 2015-06-19
 +++++++++++++++++++++++++++++++++++++++++++
