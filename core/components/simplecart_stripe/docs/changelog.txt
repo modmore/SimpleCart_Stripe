@@ -1,4 +1,8 @@
+++ Stripe Gateway for SimpleCart v1.0.0-pl
+++ Released on 2015-08-21
++++++++++++++++++++++++++++++++++++++++++++
 - Fix description not being processed properly
+- Add SimpleCart as dependency for MODX Revolution 2.4+
 
 ++ Stripe Gateway for SimpleCart v1.0.0-rc1
 ++ Released on 2015-06-19

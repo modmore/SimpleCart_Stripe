@@ -118,6 +118,9 @@ $attributes = array(
     'changelog' => file_get_contents($sources['source_core'] . '/docs/changelog.txt'),
     'setup-options' => array(
         'source' => $sources['install_options'] . 'input.options.php',
+    ),
+    'requires' => array(
+        'simplecart' => '>=2.2.15',
     )
 );
 foreach ($attributes as $k => $v) {
