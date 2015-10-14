@@ -43,12 +43,43 @@ class SimpleCartStripePaymentGateway extends SimpleCartGateway {
         $chunk->setContent($content);
         $description = $chunk->process();
 
+		//Is the user logged in? If so we'll use their email address and check if they've ordered before
+		$user=$this->modx->getUser();
+            $this->modx->log(modX::LOG_LEVEL_ERROR, 'aaa');
+		
+		if ($user) {
+			$profile = $user->getOne('Profile');
+			$extended = $profile->get('extended');
+            $this->modx->log(modX::LOG_LEVEL_ERROR, print_r($extended,true));
+			if(isset($extended['stripeid'])) $stripeid = $extended['stripeid'];
+		} 
+		// get order email
+		$orderAddress = $this->order->getOne('Address');
+		$email=$orderAddress->get('email');
+		
+
         try {
+	        if(isset($stripeid)) {
+		        $customer = \Stripe\Customer::retrieve($stripeid);
+	        } else {
+				$customer = \Stripe\Customer::create(array(
+					"email" => $email,
+					"card"  => $token
+				));
+				if($user) {
+					$extended['stripeid'] = $customer->id;
+					$profile->set('extended', $extended);
+				    $profile->save();
+				}
+			}
             $charge = \Stripe\Charge::create(array(
+				"customer" => $customer->id,
                 "amount" => $amount, // amount in cents, again
                 "currency" => $currency,
-                "source" => $token,
-                "description" => $description
+                "description" => $description,
+                "metadata" => array(
+                	"Order number" => $this->order->get('ordernr')
+                )
             ));
         } catch(\Stripe\Error\Card $e) {
             // The card has been declined
