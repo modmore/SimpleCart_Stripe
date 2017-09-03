@@ -1,8 +1,9 @@
 <?php
 
-$_lang['simplecart.methods.payment.stripe'] = "Stripe";
-$_lang['simplecart.methods.payment.stripe.desc'] = "Pay your order with a Credit Card.";
-$_lang['simplecart.methods.payment.stripe.orderdesc'] = "You've paid your order with a Credit Card. We successfully have received the payment and your order will be shipped.";
+$_lang['simplecart.methods.payment.stripe'] = 'Stripe';
+$_lang['simplecart.methods.payment.stripe.desc'] = 'Pay by Credit Card.';
+$_lang['simplecart.methods.payment.stripe.orderdesc'] = "You've paid your order with a Credit Card. We successfully received the payment and your order will be processed soon.";
+$_lang['simplecart_stripe.credit_or_debit'] = 'Please enter your credit or debit card information.';
 
 // properties
 $_lang['simplecart.methods.payment.stripe.property_currency'] = "Currency";

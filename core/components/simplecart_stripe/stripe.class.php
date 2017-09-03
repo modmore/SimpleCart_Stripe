@@ -1,10 +1,9 @@
 <?php
 
-// require the autoload
-require 'vendor/autoload.php';
+require __DIR__ . '/shared.class.php';
 
-class SimpleCartStripePaymentGateway extends SimpleCartGateway {
-
+class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
+{
     public function view() {
         $tpl = $this->getProperty('cart_tpl', 'scStripeCart');
         $footerTpl = $this->getProperty('cart_footer_tpl', 'scStripeFooter');
@@ -45,10 +44,14 @@ class SimpleCartStripePaymentGateway extends SimpleCartGateway {
 
         try {
             $charge = \Stripe\Charge::create(array(
-                "amount" => $amount, // amount in cents, again
-                "currency" => $currency,
-                "source" => $token,
-                "description" => $description
+                'amount' => $amount, // amount in cents, again
+                'currency' => $currency,
+                'source' => $token,
+                'description' => $description,
+                'metadata' => [
+                    'order_number' => $this->order->get('ordernr'),
+                    'order_id' => $this->order->get('id'),
+                ]
             ));
         } catch(\Stripe\Error\Card $e) {
             // The card has been declined
@@ -99,18 +102,5 @@ class SimpleCartStripePaymentGateway extends SimpleCartGateway {
         }
 
         return false;
-    }
-
-    /** CUSTOM METHODS **/
-
-    protected function initStripe() {
-        $key = $this->getProperty('secret_key');
-        if (empty($key)) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, 'Unable to initiate Stripe gateway for SimpleCart: no secret key is set on the payment method.');
-            return false;
-        }
-
-        \Stripe\Stripe::setApiKey($key);
-        return true;
     }
 }

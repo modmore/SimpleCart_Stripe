@@ -1,41 +1,57 @@
-<script type="text/javascript" src="https://js.stripe.com/v2/"></script>
+<script type="text/javascript" src="https://js.stripe.com/v3/"></script>
 <script type="text/javascript">
-    Stripe.setPublishableKey('[[+publishable_key]]');
+    var StripeInstance[[+method_id]] = Stripe('[[+publishable_key]]'),
+        StripeElements[[+method_id]] = StripeInstance[[+method_id]].elements(),
+        displayError[[+method_id]] = document.getElementById('sc-stripe-[[+method_id]]-card-errors'),
+        checkoutForm[[+method_id]] = document.getElementById('simplecartCheckout');
 
-    var form;
+    document.addEventListener("DOMContentLoaded", function(event) {
+        // Create the Card element
+        var StripeCard[[+method_id]] = StripeElements[[+method_id]].create('card');
 
-    jQuery(function($) {
-        var pmRadio = $('input[name=paymentMethod]');
-        form = pmRadio.parents('form');
+        StripeCard[[+method_id]].mount('#sc-stripe-[[+method_id]]-card-element');
+        StripeCard[[+method_id]].addEventListener('change', function(event) {
+            if (event.error) {
+                displayError[[+method_id]].textContent = event.error.message;
+            } else {
+                displayError[[+method_id]].textContent = '';
+            }
+        });
 
-        form.on('submit', function(event) {
-            var $form = $(this),
-                method = pmRadio.filter(':checked').val();
-            if (method == [[+method_id]]) {
-                // Disable the submit button to prevent repeated clicks
-                $form.find('button').attr('disabled', true);
+        checkoutForm[[+method_id]].addEventListener('submit', function(event) {
+            if (checkoutForm[[+method_id]].paymentMethod.value == [[+method_id]]) {
 
-                Stripe.card.createToken(form, stripeResponseHandler);
+                event.preventDefault();
+
+                StripeInstance[[+method_id]].createToken(StripeCard[[+method_id]]).then(function(result) {
+                    if (result.error) {
+                        // Inform the user if there was an error
+                        displayError[[+method_id]].textContent = result.error.message;
+                    } else {
+                        // Send the token to your server
+                        stripeTokenHandler[[+method_id]](result.token);
+                    }
+                });
+
+//                 Disable the submit button to prevent repeated clicks
+//                $form.find('button').attr('disabled', true);
 
                 // Prevent the form from submitting with the default action
                 return false;
             }
 
-            return true;
+            return false;
         });
-    });
-    function stripeResponseHandler(status, response) {
-        if (response.error) {
-            // Show the errors on the form
-            form.find('.payment-errors').text(response.error.message);
-            form.find('button').attr('disabled', false);
-        } else {
-            // response contains id and card, which contains additional card details
-            var token = response.id;
-            // Insert the token into the form so it gets submitted to the server
-            form.append($('<input type="hidden" name="stripeToken" />').val(token));
-            // and submit
-            form.get(0).submit();
+
+        function stripeTokenHandler[[+method_id]](token) {
+            // Insert the token ID into the form so it gets submitted to the server
+            var hiddenInput = document.createElement('input');
+            hiddenInput.setAttribute('type', 'hidden');
+            hiddenInput.setAttribute('name', 'stripeToken');
+            hiddenInput.setAttribute('value', token.id);
+            checkoutForm[[+method_id]].appendChild(hiddenInput);
+            // Submit the form
+            checkoutForm[[+method_id]].submit();
         }
-    };
+    });
 </script>

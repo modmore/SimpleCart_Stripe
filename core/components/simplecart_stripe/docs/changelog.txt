@@ -1,3 +1,10 @@
+++ Stripe Gateway for SimpleCart v2.0.0-rc1
+++ Released on 2017-09-
++++++++++++++++++++++++++++++++++++++++++++
+- Move from Stripe.js v2 to v3
+- Now uses Stripe Elements (type: card) for building the UI
+- The Stripe.js integration no longer depends on jQuery, now uses VanillaJS (IE9+)
+
 ++ Stripe Gateway for SimpleCart v1.0.0-pl
 ++ Released on 2015-08-21
 +++++++++++++++++++++++++++++++++++++++++++
