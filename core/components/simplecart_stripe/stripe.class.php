@@ -23,13 +23,18 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
             return false;
         }
 
-        // Get the submitted token from the front-end
-        $token = $this->getField('stripeToken');
-        $this->order->addLog('Stripe Token', $token);
+        $sourceId = $this->getField('stripeSource');
+        if (empty($sourceId)) {
+            $this->order->addLog('[Stripe] Source', 'Not submitted');
+            $this->order->set('status', 'payment_failed');
+            $this->order->save();
+            return false;
+        }
+        $this->order->addLog('[Stripe] Source', $sourceId);
 
         // SimpleCart stores totals in decimal values, so we need to turn that into cents for Stripe
         $amount = $this->order->get('total');
-        $amount = intval($amount * 100);
+        $amount = (int)$amount * 100;
 
         // Get the currency
         $currency = $this->getProperty('currency', 'EUR');
@@ -42,11 +47,71 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
         $chunk->setContent($content);
         $description = $chunk->process();
 
+        $source = \Stripe\Source::retrieve($sourceId);
+
+        $use3DS = false;
+        if ($source['card']['three_d_secure'] !== 'not_supported') {
+            // The card supports 3D Secure
+            $use3DS = $source['card']['three_d_secure'] === 'required';
+            if (!$use3DS && $this->getProperty('use_3ds_if_optional', 1)) {
+                $use3DS = true;
+            }
+        }
+
+        $this->order->addLog('[Stripe] 3DS Support', $source['card']['three_d_secure']);
+
+        // If we go ahead and use 3DS, create a new source of type three_d_secure
+        if ($use3DS) {
+            try {
+                $source = \Stripe\Source::create([
+                    'amount' => $amount, // amount in cents
+                    'currency' => $currency,
+                    'type' => 'three_d_secure',
+                    'three_d_secure' => array(
+                        'card' => $sourceId,
+                    ),
+                    'redirect' => array(
+                        'return_url' => $this->getRedirectUrl(),
+                    ),
+                ]);
+                $this->order->addLog('[Stripe] 3DS Source', $source['id']);
+                $this->order->save();
+            } catch (\Stripe\Error\Card $e) {
+                // The card has been declined
+                $this->order->addLog('[Stripe] 3DS Card Declined', $e->getMessage());
+                $this->order->set('status', 'payment_failed');
+                $this->order->save();
+
+                return false;
+            } catch (\Stripe\Error\Base $e) {
+                $this->order->addLog('[Stripe] 3DS Error', $e->getMessage());
+                $this->order->set('status', 'payment_failed');
+                $this->order->save();
+
+                return false;
+            } catch (Exception $e) {
+                $this->order->addLog('Uncaught Exception', $e->getMessage());
+                $this->order->set('status', 'payment_failed');
+                $this->order->save();
+
+                return false;
+            }
+
+            // Redirect the customer to the 3DS page
+            if (!empty($source['redirect']) && !empty($source['redirect']['url'])) {
+                $this->order->addLog('[Stripe] Redirecting for 3DS', $source['redirect']['url']);
+                $this->order->save();
+                $this->modx->sendRedirect($source['redirect']['url']);
+            }
+        }
+
+        // If we made it here, either 3DS failed, or 3DS isn't supported.
+        // So we do a normal charge.
         try {
             $charge = \Stripe\Charge::create(array(
-                'amount' => $amount, // amount in cents, again
+                'amount' => $amount, // amount in cents
                 'currency' => $currency,
-                'source' => $token,
+                'source' => $source['id'],
                 'description' => $description,
                 'metadata' => [
                     'order_number' => $this->order->get('ordernr'),
@@ -72,8 +137,8 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
         }
 
         // log the finishing status
-        $this->order->addLog('Stripe Charge ID', $charge['id']);
-        $this->order->addLog('Stripe Card', $charge['source']['brand'] . ' ' . $charge['source']['last4']);
+        $this->order->addLog('[Stripe] Charge ID', $charge['id']);
+        $this->order->addLog('[Stripe] Card', $charge['source']['brand'] . ' ' . $charge['source']['last4']);
         $this->order->setStatus('finished');
         $this->order->save();
         return true;
@@ -85,22 +150,33 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
             return false;
         }
 
-        $chargeId = $this->order->getLog('Stripe Charge ID');
+        $chargeId = $this->order->getLog('[Stripe] Charge ID');
         if (empty($chargeId)) {
+            $this->order->addLog('[Stripe] Verify Fail', 'No Charge ID set');
+            $this->order->save();
             return false;
         }
 
         try {
             $charge = \Stripe\Charge::retrieve($chargeId);
         } catch (\Exception $e) {
-            $this->order->addLog('Stripe Verify Fail', $e->getMessage());
+            $this->order->addLog('[Stripe] Verify Fail', $e->getMessage());
+            $this->order->save();
             return false;
         }
 
-        if ($charge && $charge['status'] === 'succeeded') {
-            return true;
+        if (!$charge) {
+            $this->order->addLog('[Stripe] Verify Fail', 'Charge not found');
+            $this->order->save();
+            return false;
         }
 
-        return false;
+        if ($charge['status'] !== 'succeeded') {
+            $this->order->addLog('[Stripe] Verify Fail', 'Charge status: ' . $charge['status']);
+            $this->order->save();
+            return false;
+        }
+
+        return true;
     }
 }

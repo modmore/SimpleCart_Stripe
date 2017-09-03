@@ -23,13 +23,13 @@
 
                 event.preventDefault();
 
-                StripeInstanceCard.createToken(StripeCardCard).then(function(result) {
+                StripeInstanceCard.createSource(StripeCardCard).then(function(result) {
                     if (result.error) {
                         // Inform the user if there was an error
                         displayErrorCard.textContent = result.error.message;
                     } else {
                         // Send the token to your server
-                        stripeTokenHandlerCard(result.token);
+                        stripeSourceHandlerCard(result.source);
                     }
                 });
 
@@ -43,12 +43,12 @@
             return false;
         });
 
-        function stripeTokenHandlerCard(token) {
+        function stripeSourceHandlerCard(source) {
             // Insert the token ID into the form so it gets submitted to the server
             var hiddenInput = document.createElement('input');
             hiddenInput.setAttribute('type', 'hidden');
-            hiddenInput.setAttribute('name', 'stripeToken');
-            hiddenInput.setAttribute('value', token.id);
+            hiddenInput.setAttribute('name', 'stripeSource');
+            hiddenInput.setAttribute('value', source.id);
             checkoutFormCard.appendChild(hiddenInput);
             // Submit the form
             checkoutFormCard.submit();
