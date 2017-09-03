@@ -2,10 +2,16 @@
 
 namespace Stripe;
 
+/**
+ * Class Recipient
+ *
+ * @package Stripe
+ */
 class Recipient extends ApiResource
 {
     /**
-     * @param string $id The ID of the recipient to retrieve.
+     * @param array|string $id The ID of the recipient to retrieve, or an
+     *     options array containing an `id` key.
      * @param array|string|null $opts
      *
      * @return Recipient
@@ -19,7 +25,7 @@ class Recipient extends ApiResource
      * @param array|null $params
      * @param array|string|null $opts
      *
-     * @return Recipients[]
+     * @return Collection of Recipients
      */
     public static function all($params = null, $opts = null)
     {
@@ -35,6 +41,18 @@ class Recipient extends ApiResource
     public static function create($params = null, $opts = null)
     {
         return self::_create($params, $opts);
+    }
+
+    /**
+     * @param string $id The ID of the recipient to update.
+     * @param array|null $params
+     * @param array|string|null $options
+     *
+     * @return Recipient The updated recipient.
+     */
+    public static function update($id, $params = null, $options = null)
+    {
+        return self::_update($id, $params, $options);
     }
 
     /**
@@ -61,7 +79,7 @@ class Recipient extends ApiResource
     /**
      * @param array|null $params
      *
-     * @return array An array of the recipient's Transfers.
+     * @return Collection of the Recipient's Transfers
      */
     public function transfers($params = null)
     {

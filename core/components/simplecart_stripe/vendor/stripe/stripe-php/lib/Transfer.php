@@ -2,10 +2,32 @@
 
 namespace Stripe;
 
+/**
+ * Class Transfer
+ *
+ * @property string $id
+ * @property string $object
+ * @property int $amount
+ * @property int $amount_reversed
+ * @property string $balance_transaction
+ * @property int $created
+ * @property string $currency
+ * @property int $date
+ * @property mixed $destination
+ * @property mixed $destination_payment
+ * @property bool $livemode
+ * @property mixed $metadata
+ * @property mixed $reversals
+ * @property bool $reversed
+ * @property mixed $source_transaction
+ *
+ * @package Stripe
+ */
 class Transfer extends ApiResource
 {
     /**
-     * @param string $id The ID of the transfer to retrieve.
+     * @param array|string $id The ID of the transfer to retrieve, or an
+     *     options array containing an `id` key.
      * @param array|string|null $opts
      *
      * @return Transfer
@@ -19,7 +41,7 @@ class Transfer extends ApiResource
      * @param array|null $params
      * @param array|string|null $opts
      *
-     * @return Transfer[]
+     * @return Collection of Transfers
      */
     public static function all($params = null, $opts = null)
     {
@@ -38,12 +60,24 @@ class Transfer extends ApiResource
     }
 
     /**
+     * @param string $id The ID of the transfer to update.
+     * @param array|null $params
+     * @param array|string|null $options
+     *
+     * @return Transfer The updated transfer.
+     */
+    public static function update($id, $params = null, $options = null)
+    {
+        return self::_update($id, $params, $options);
+    }
+
+    /**
      * @return TransferReversal The created transfer reversal.
      */
     public function reverse($params = null, $opts = null)
     {
         $url = $this->instanceUrl() . '/reversals';
-        list($response, $opts) = $this->_request('post', $url, $params, $options);
+        list($response, $opts) = $this->_request('post', $url, $params, $opts);
         $this->refreshFrom($response, $opts);
         return $this;
     }

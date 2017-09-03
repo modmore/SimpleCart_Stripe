@@ -2,6 +2,11 @@
 
 namespace Stripe;
 
+/**
+ * Class BitcoinReceiver
+ *
+ * @package Stripe
+ */
 class BitcoinReceiver extends ExternalAccount
 {
     /**
@@ -32,7 +37,8 @@ class BitcoinReceiver extends ExternalAccount
     }
 
     /**
-     * @param string $id The ID of the Bitcoin Receiver to retrieve.
+     * @param array|string $id The ID of the bitcoin receiver to retrieve, or
+     *     an options array containing an `id` key.
      * @param array|string|null $opts
      *
      * @return BitcoinReceiver
@@ -46,7 +52,7 @@ class BitcoinReceiver extends ExternalAccount
      * @param array|null $params
      * @param array|string|null $opts
      *
-     * @return BitcoinReceiver[].
+     * @return Collection of BitcoinReceivers
      */
     public static function all($params = null, $opts = null)
     {
@@ -62,5 +68,19 @@ class BitcoinReceiver extends ExternalAccount
     public static function create($params = null, $opts = null)
     {
         return self::_create($params, $opts);
+    }
+
+    /**
+     * @param array|null $params
+     * @param array|string|null $options
+     *
+     * @return BitcoinReceiver The refunded Bitcoin Receiver item.
+     */
+    public function refund($params = null, $options = null)
+    {
+        $url = $this->instanceUrl() . '/refund';
+        list($response, $opts) = $this->_request('post', $url, $params, $options);
+        $this->refreshFrom($response, $opts);
+        return $this;
     }
 }

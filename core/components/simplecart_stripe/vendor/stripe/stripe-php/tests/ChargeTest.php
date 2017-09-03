@@ -15,17 +15,11 @@ class ChargeTest extends TestCase
     {
         self::authorizeFromEnv();
 
-        $card = array(
-            'number' => '4242424242424242',
-            'exp_month' => 5,
-            'exp_year' => date('Y') + 1
-        );
-
         $c = Charge::create(
             array(
                 'amount' => 100,
                 'currency' => 'usd',
-                'card' => $card
+                'card' => 'tok_visa'
             )
         );
         $this->assertTrue($c->paid);
@@ -36,17 +30,11 @@ class ChargeTest extends TestCase
     {
         self::authorizeFromEnv();
 
-        $card = array(
-            'number' => '4242424242424242',
-            'exp_month' => 5,
-            'exp_year' => date('Y') + 1
-        );
-
         $c = Charge::create(
             array(
                 'amount' => 100,
                 'currency' => 'usd',
-                'card' => $card
+                'card' => 'tok_visa'
             ),
             array(
                 'idempotency_key' => self::generateRandomString(),
@@ -54,27 +42,22 @@ class ChargeTest extends TestCase
         );
 
         $this->assertTrue($c->paid);
-        $this->assertFalse($c->refunded);
+        $this->assertSame(200, $c->getLastResponse()->code);
     }
 
     public function testRetrieve()
     {
         self::authorizeFromEnv();
 
-        $card = array(
-            'number' => '4242424242424242',
-            'exp_month' => 5,
-            'exp_year' => date('Y') + 1
-        );
-
         $c = Charge::create(
             array(
                 'amount' => 100,
                 'currency' => 'usd',
-                'card' => $card
+                'card' => 'tok_visa'
             )
         );
         $d = Charge::retrieve($c->id);
+        $this->assertSame(200, $d->getLastResponse()->code);
         $this->assertSame($d->id, $c->id);
     }
 
@@ -82,17 +65,11 @@ class ChargeTest extends TestCase
     {
         self::authorizeFromEnv();
 
-        $card = array(
-            'number' => '4242424242424242',
-            'exp_month' => 5,
-            'exp_year' => date('Y') + 1
-        );
-
         $charge = Charge::create(
             array(
                 'amount' => 100,
                 'currency' => 'usd',
-                'card' => $card
+                'card' => 'tok_visa'
             )
         );
 
@@ -107,22 +84,17 @@ class ChargeTest extends TestCase
     {
         self::authorizeFromEnv();
 
-        $card = array(
-            'number' => '4242424242424242',
-            'exp_month' => 5,
-            'exp_year' => date('Y') + 1
-        );
-
         $charge = Charge::create(
             array(
                 'amount' => 100,
                 'currency' => 'usd',
-                'card' => $card
+                'card' => 'tok_visa'
             )
         );
 
         $charge->metadata = array('test' => 'foo bar');
         $charge->save();
+        $this->assertSame(200, $charge->getLastResponse()->code);
 
         $updatedCharge = Charge::retrieve($charge->id);
         $this->assertSame('foo bar', $updatedCharge->metadata['test']);
@@ -132,17 +104,11 @@ class ChargeTest extends TestCase
     {
         self::authorizeFromEnv();
 
-        $card = array(
-            'number' => '4242424242424242',
-            'exp_month' => 5,
-            'exp_year' => date('Y') + 1
-        );
-
         $charge = Charge::create(
             array(
                 'amount' => 100,
                 'currency' => 'usd',
-                'card' => $card
+                'card' => 'tok_visa'
             )
         );
 
@@ -180,17 +146,11 @@ class ChargeTest extends TestCase
     {
         self::authorizeFromEnv();
 
-        $card = array(
-            'number' => '4242424242424242',
-            'exp_month' => 5,
-            'exp_year' => date('Y') + 1
-        );
-
         $charge = Charge::create(
             array(
                 'amount' => 100,
                 'currency' => 'usd',
-                'card' => $card
+                'card' => 'tok_visa'
             )
         );
 
