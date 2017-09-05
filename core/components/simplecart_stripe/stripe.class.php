@@ -66,10 +66,15 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
                 $source = \Stripe\Source::create([
                     'amount' => $amount, // amount in cents
                     'currency' => $currency,
+                    'statement_descriptor' => $description,
                     'type' => 'three_d_secure',
                     'three_d_secure' => array(
                         'card' => $sourceId,
                     ),
+                    'metadata' => [
+                        'order_nr' => $this->order->get('ordernr'),
+                        'order_id' => $this->order->get('id'),
+                    ],
                     'redirect' => array(
                         'return_url' => $this->getRedirectUrl(),
                     ),
@@ -107,41 +112,7 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
 
         // If we made it here, either 3DS failed, or 3DS isn't supported.
         // So we do a normal charge.
-        try {
-            $charge = \Stripe\Charge::create(array(
-                'amount' => $amount, // amount in cents
-                'currency' => $currency,
-                'source' => $source['id'],
-                'description' => $description,
-                'metadata' => [
-                    'order_number' => $this->order->get('ordernr'),
-                    'order_id' => $this->order->get('id'),
-                ]
-            ));
-        } catch(\Stripe\Error\Card $e) {
-            // The card has been declined
-            $this->order->addLog('Card Declined', $e->getMessage());
-            $this->order->set('status', 'payment_failed');
-            $this->order->save();
-            return false;
-        } catch(\Stripe\Error\Base $e) {
-            $this->order->addLog('Stripe Error', $e->getMessage());
-            $this->order->set('status', 'payment_failed');
-            $this->order->save();
-            return false;
-        } catch(Exception $e) {
-            $this->order->addLog('Uncaught Exception', $e->getMessage());
-            $this->order->set('status', 'payment_failed');
-            $this->order->save();
-            return false;
-        }
-
-        // log the finishing status
-        $this->order->addLog('[Stripe] Charge ID', $charge['id']);
-        $this->order->addLog('[Stripe] Card', $charge['source']['brand'] . ' ' . $charge['source']['last4']);
-        $this->order->setStatus('finished');
-        $this->order->save();
-        return true;
+        return $this->createCharge($sourceId);
     }
 
     public function verify() {
@@ -177,6 +148,64 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
             return false;
         }
 
+        return true;
+    }
+
+    public function createCharge($sourceId)
+    {
+        if (!$this->initStripe()) {
+            return false;
+        }
+
+        // SimpleCart stores totals in decimal values, so we need to turn that into cents for Stripe
+        $amount = $this->order->get('total');
+        $amount = (int)$amount * 100;
+
+        // Get the currency
+        $currency = $this->getProperty('currency', 'EUR');
+        $currency = strtolower($currency);
+
+        // Get the description
+        $content = $this->modx->lexicon('simplecart.methods.yourorderat');
+        $chunk = $this->modx->newObject('modChunk');
+        $chunk->setCacheable(false);
+        $chunk->setContent($content);
+        $description = $chunk->process();
+
+        try {
+            $charge = \Stripe\Charge::create(array(
+                'amount' => $amount, // amount in cents
+                'currency' => $currency,
+                'source' => $sourceId,
+                'description' => $description,
+                'metadata' => [
+                    'order_nr' => $this->order->get('ordernr'),
+                    'order_id' => $this->order->get('id'),
+                ],
+            ));
+        } catch(\Stripe\Error\Card $e) {
+            // The card has been declined
+            $this->order->addLog('[Stripe] Error', 'Card Declined: ' . $e->getMessage());
+            $this->order->set('status', 'payment_failed');
+            $this->order->save();
+            return false;
+        } catch(\Stripe\Error\Base $e) {
+            $this->order->addLog('[Stripe] Error', $e->getMessage());
+            $this->order->set('status', 'payment_failed');
+            $this->order->save();
+            return false;
+        } catch(Exception $e) {
+            $this->order->addLog('[Stripe] Error', 'Uncaught Exception: ' . $e->getMessage());
+            $this->order->set('status', 'payment_failed');
+            $this->order->save();
+            return false;
+        }
+
+        // log the finishing status
+        $this->order->addLog('[Stripe] Charge ID', $charge['id']);
+//        $this->order->addLog('[Stripe] Card', $charge['source']['brand'] . ' ' . $charge['source']['last4']);
+        $this->order->setStatus('finished');
+        $this->order->save();
         return true;
     }
 }
