@@ -173,16 +173,55 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
         $description = $chunk->process();
 
         try {
-            $charge = \Stripe\Charge::create(array(
+            $user = $this->modx->user;
+            $customerId = '';
+            if ($user && $profile = $user->getOne('Profile')) {
+                $extended = $profile->get('extended');
+                if (!is_array($extended)) {
+                    $extended = [];
+                }
+                if (!empty($extended['stripe_customer_id'])) {
+                    $customerId = $extended['stripe_customer_id'];
+                }
+
+                /** @var array $address */
+                $address = $this->order->getAddress();
+                if (is_array($address) && empty($customerId)) {
+                    $customer = null;
+                    try {
+                        $customer = \Stripe\Customer::create([
+                            'email' => $address['email'],
+                            'description' => $address['firstname'] . ' ' . $address['lastname'],
+                            'metadata' => [
+                                'MODX User ID' => $user->get('id'),
+                                'MODX Username' => $user->get('username'),
+                            ]
+                        ]);
+                    } catch (\Stripe\Error\Base $e) {
+                        $this->order->addLog('[Stripe] Customer Error', $e->getMessage());
+                        $this->order->save();
+                    }
+
+                    if ($customer) {
+                        $customerId = $customer['id'];
+                        $extended['stripe_customer_id'] = $customerId;
+                        $profile->set('extended', $extended);
+                        $profile->save();
+                    }
+                }
+            }
+
+            $charge = \Stripe\Charge::create([
                 'amount' => $amount, // amount in cents
                 'currency' => $currency,
                 'source' => $sourceId,
+                'customer' => !empty($customerId) ? $customerId : null,
                 'description' => $description,
                 'metadata' => [
                     'order_nr' => $this->order->get('ordernr'),
                     'order_id' => $this->order->get('id'),
                 ],
-            ));
+            ]);
         } catch(\Stripe\Error\Card $e) {
             // The card has been declined
             $this->order->addLog('[Stripe] Error', 'Card Declined: ' . $e->getMessage());
