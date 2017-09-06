@@ -4,11 +4,6 @@ require_once dirname(__DIR__) . '/simplecart_stripe/shared.class.php';
 
 class SimpleCartStripeBancontactPaymentGateway extends SimpleCartStripeShared
 {
-    public function view() {
-        $tpl = $this->getProperty('cart_tpl', 'scStripeBancontactCart');
-        return $this->simplecart->getChunk($tpl, []);
-    }
-
     public function submit() {
         if (!$this->initStripe()) {
             return false;
@@ -24,6 +19,8 @@ class SimpleCartStripeBancontactPaymentGateway extends SimpleCartStripeShared
         // Get the description
         $description = $this->getDescription();
 
+        /** @var array $address */
+        $address = $this->order->getAddress();
         // Create a bancontact source
         try {
             $source = \Stripe\Source::create([
@@ -31,16 +28,17 @@ class SimpleCartStripeBancontactPaymentGateway extends SimpleCartStripeShared
                 'currency' => $currency,
                 'statement_descriptor' => $description,
                 'type' => 'bancontact',
-                'owner' => array(
-                    'name' => $this->getField('account_holder'),
-                ),
+                'owner' => [
+                    'name' => is_array($address) ? $address['firstname'] . ' ' . $address['lastname'] : '',
+                    'email' => is_array($address) ? $address['email'] : '',
+                ],
                 'metadata' => [
                     'order_nr' => $this->order->get('ordernr'),
                     'order_id' => $this->order->get('id'),
                 ],
-                'redirect' => array(
+                'redirect' => [
                     'return_url' => $this->getRedirectUrl(),
-                ),
+                ],
             ]);
             $this->order->addLog('[Stripe] Bancontact Source', $source['id']);
             $this->order->save();
@@ -65,7 +63,7 @@ class SimpleCartStripeBancontactPaymentGateway extends SimpleCartStripeShared
             return false;
         }
 
-        // Redirect the customer to the 3DS page
+        // Redirect the customer to Bancontact
         if (!empty($source['redirect']) && !empty($source['redirect']['url'])) {
             $this->order->addLog('[Stripe] Redirecting to Bancontact', $source['redirect']['url']);
             $this->order->set('async_payment_confirmation', true);

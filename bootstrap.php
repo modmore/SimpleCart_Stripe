@@ -182,7 +182,6 @@ $bancontactId = $bancontact->get('id');
 $bancontactProps = array(
     'currency' => 'EUR',
     'secret_key' => '',
-    'cart_tpl' => 'scStripeBancontactCart',
 );
 foreach ($bancontactProps as $key => $value) {
     createObject('simpleCartMethodProperty', [
