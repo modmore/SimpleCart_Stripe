@@ -105,6 +105,7 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
             // Redirect the customer to the 3DS page
             if (!empty($source['redirect']) && !empty($source['redirect']['url'])) {
                 $this->order->addLog('[Stripe] Redirecting for 3DS', $source['redirect']['url']);
+                $this->order->set('async_payment_confirmation', true);
                 $this->order->save();
                 $this->modx->sendRedirect($source['redirect']['url']);
             }
@@ -123,7 +124,7 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
 
         $chargeId = $this->order->getLog('[Stripe] Charge ID');
         if (empty($chargeId)) {
-            $this->order->addLog('[Stripe] Verify Fail', 'No Charge ID set');
+            $this->order->addLog('[Stripe] Verify Fail', 'No Charge ID set yet, card might be pending approval.');
             $this->order->save();
             return false;
         }
@@ -244,6 +245,9 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
         $this->order->addLog('[Stripe] Charge ID', $charge['id']);
 //        $this->order->addLog('[Stripe] Card', $charge['source']['brand'] . ' ' . $charge['source']['last4']);
         $this->order->setStatus('finished');
+        if (!$this->order->get('confirmation_sent')) {
+            $this->order->resendConfirmation();
+        }
         $this->order->save();
         return true;
     }

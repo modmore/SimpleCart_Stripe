@@ -77,6 +77,10 @@ class SimpleCartStripeWebHookProcessor extends modProcessor
                     return json_encode(['processed' => true, 'message' => 'Order already has a charge assigned.']);
                 }
 
+                $order->addLog('[Stripe] Source Chargeable', 'Received webhook, ' . $source['id'] . ' is now chargeable.');
+                $order->set('async_payment_confirmation', false);
+                $order->save();
+
                 $success = $gateway->createCharge($source['id']);
                 if ($success) {
                     http_response_code(200);
