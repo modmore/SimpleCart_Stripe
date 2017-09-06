@@ -22,7 +22,7 @@ if (!($SimpleCart instanceof SimpleCart)) {
     die('Could not load SimpleCart from ' . $scPath);
 }
 
-/* Namespace */
+/* Namespaces */
 if (!createObject('modNamespace',array(
     'name' => 'simplecart_stripe',
     'path' => $componentPath.'/core/components/simplecart_stripe/',
@@ -30,16 +30,22 @@ if (!createObject('modNamespace',array(
 ),'name', false)) {
     echo "Error creating namespace simplecart_stripe.\n";
 }
-
 if (!createObject('modNamespace',array(
     'name' => 'simplecart_stripebancontact',
     'path' => $componentPath.'/core/components/simplecart_stripebancontact/',
     'assets_path' => $componentPath.'/assets/components/simplecart_stripe/',
 ),'name', false)) {
-    echo "Error creating namespace simplecart_stripe.\n";
+    echo "Error creating namespace simplecart_stripebancontact.\n";
+}
+if (!createObject('modNamespace',array(
+    'name' => 'simplecart_stripeideal',
+    'path' => $componentPath.'/core/components/simplecart_stripeideal/',
+    'assets_path' => $componentPath.'/assets/components/simplecart_stripe/',
+),'name', false)) {
+    echo "Error creating namespace simplecart_stripeideal.\n";
 }
 
-/* Path settings */
+/* Path settings 1 */
 if (!createObject('modSystemSetting', array(
     'key' => 'simplecart_stripe.core_path',
     'value' => $componentPath.'/core/components/simplecart_stripe/',
@@ -50,7 +56,6 @@ if (!createObject('modSystemSetting', array(
 ), 'key', false)) {
     echo "Error creating simplecart_stripe.core_path setting.\n";
 }
-
 if (!createObject('modSystemSetting', array(
     'key' => 'simplecart_stripe.assets_path',
     'value' => $componentPath.'/assets/components/simplecart_stripe/',
@@ -61,23 +66,45 @@ if (!createObject('modSystemSetting', array(
 ), 'key', false)) {
     echo "Error creating simplecart_stripe.assets_path setting.\n";
 }
-/* Path settings */
+
+/* Path settings 2 */
 if (!createObject('modSystemSetting', array(
     'key' => 'simplecart_stripebancontact.core_path',
     'value' => $componentPath.'/core/components/simplecart_stripebancontact/',
     'xtype' => 'textfield',
-    'namespace' => 'simplecart_stripe',
+    'namespace' => 'simplecart_stripebancontact',
     'area' => 'Paths',
     'editedon' => time(),
 ), 'key', false)) {
     echo "Error creating simplecart_stripe.core_path setting.\n";
 }
-
 if (!createObject('modSystemSetting', array(
     'key' => 'simplecart_stripebancontact.assets_path',
     'value' => $componentPath.'/assets/components/simplecart_stripe/',
     'xtype' => 'textfield',
-    'namespace' => 'simplecart_stripe',
+    'namespace' => 'simplecart_stripebancontact',
+    'area' => 'Paths',
+    'editedon' => time(),
+), 'key', false)) {
+    echo "Error creating simplecart_stripe.assets_path setting.\n";
+}
+
+/* Path settings 3 */
+if (!createObject('modSystemSetting', array(
+    'key' => 'simplecart_stripeideal.core_path',
+    'value' => $componentPath.'/core/components/simplecart_stripeideal/',
+    'xtype' => 'textfield',
+    'namespace' => 'simplecart_stripeideal',
+    'area' => 'Paths',
+    'editedon' => time(),
+), 'key', false)) {
+    echo "Error creating simplecart_stripe.core_path setting.\n";
+}
+if (!createObject('modSystemSetting', array(
+    'key' => 'simplecart_stripeideal.assets_path',
+    'value' => $componentPath.'/assets/components/simplecart_stripe/',
+    'xtype' => 'textfield',
+    'namespace' => 'simplecart_stripeideal',
     'area' => 'Paths',
     'editedon' => time(),
 ), 'key', false)) {
@@ -123,7 +150,6 @@ if (!$method) {
     die ('Failed to load or create simplecart_stripe payment method');
 }
 $methodId = $method->get('id');
-
 $props = array(
     'currency' => 'USD',
     'secret_key' => '',
@@ -153,11 +179,36 @@ if (!$bancontact) {
     die ('Failed to load or create simplecart_stripebancontact payment method');
 }
 $bancontactId = $bancontact->get('id');
-
 $bancontactProps = array(
     'currency' => 'EUR',
     'secret_key' => '',
     'cart_tpl' => 'scStripeBancontactCart',
+);
+foreach ($bancontactProps as $key => $value) {
+    createObject('simpleCartMethodProperty', [
+        'method' => $bancontactId,
+        'name' => $key,
+        'value' => $value
+    ], ['method', 'name'], false);
+}
+// Stripe iDeal method
+if (!createObject('simpleCartMethod', array(
+    'name' => 'stripeideal',
+    'price_add' => null,
+    'type' => 'payment',
+    'sort_order' => $modx->getCount('simpleCartMethod') + 1,
+), 'name', false)) {
+    echo "Error creating stripeideal method.\n";
+}
+$bancontact = $modx->getObject('simpleCartMethod', ['name' => 'stripeideal']);
+if (!$bancontact) {
+    die ('Failed to load or create simplecart_stripeideal payment method');
+}
+$bancontactId = $bancontact->get('id');
+$bancontactProps = array(
+    'currency' => 'EUR',
+    'secret_key' => '',
+    'cart_tpl' => 'scStripeIdealCart',
 );
 foreach ($bancontactProps as $key => $value) {
     createObject('simpleCartMethodProperty', [
@@ -192,6 +243,15 @@ if (!createObject('modChunk', array(
     'category' => $categoryId,
 ), 'name', true)) {
     echo "Error creating scStripeBancontactCart chunk.\n";
+}
+
+if (!createObject('modChunk', array(
+    'name' => 'scStripeIdealCart',
+    'static' => true,
+    'static_file' => $componentPath.'/core/components/simplecart_stripe/elements/chunks/scstripeidealcart.chunk.tpl',
+    'category' => $categoryId,
+), 'name', true)) {
+    echo "Error creating scStripeIdealCart chunk.\n";
 }
 
 // Refresh the cache
