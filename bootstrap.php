@@ -31,6 +31,14 @@ if (!createObject('modNamespace',array(
     echo "Error creating namespace simplecart_stripe.\n";
 }
 
+if (!createObject('modNamespace',array(
+    'name' => 'simplecart_stripebancontact',
+    'path' => $componentPath.'/core/components/simplecart_stripebancontact/',
+    'assets_path' => $componentPath.'/assets/components/simplecart_stripe/',
+),'name', false)) {
+    echo "Error creating namespace simplecart_stripe.\n";
+}
+
 /* Path settings */
 if (!createObject('modSystemSetting', array(
     'key' => 'simplecart_stripe.core_path',
@@ -45,6 +53,28 @@ if (!createObject('modSystemSetting', array(
 
 if (!createObject('modSystemSetting', array(
     'key' => 'simplecart_stripe.assets_path',
+    'value' => $componentPath.'/assets/components/simplecart_stripe/',
+    'xtype' => 'textfield',
+    'namespace' => 'simplecart_stripe',
+    'area' => 'Paths',
+    'editedon' => time(),
+), 'key', false)) {
+    echo "Error creating simplecart_stripe.assets_path setting.\n";
+}
+/* Path settings */
+if (!createObject('modSystemSetting', array(
+    'key' => 'simplecart_stripebancontact.core_path',
+    'value' => $componentPath.'/core/components/simplecart_stripebancontact/',
+    'xtype' => 'textfield',
+    'namespace' => 'simplecart_stripe',
+    'area' => 'Paths',
+    'editedon' => time(),
+), 'key', false)) {
+    echo "Error creating simplecart_stripe.core_path setting.\n";
+}
+
+if (!createObject('modSystemSetting', array(
+    'key' => 'simplecart_stripebancontact.assets_path',
     'value' => $componentPath.'/assets/components/simplecart_stripe/',
     'xtype' => 'textfield',
     'namespace' => 'simplecart_stripe',
@@ -79,7 +109,7 @@ if (!createObject('modSystemSetting', array(
     echo "Error creating simplecart_stripe.assets_url setting.\n";
 }
 
-// Snippets
+// Stripe base method (card + 3DS card)
 if (!createObject('simpleCartMethod', array(
     'name' => 'stripe',
     'price_add' => null,
@@ -109,6 +139,34 @@ foreach ($props as $key => $value) {
     ], ['method', 'name'], false);
 }
 
+// Stripe Bancontact method
+if (!createObject('simpleCartMethod', array(
+    'name' => 'stripebancontact',
+    'price_add' => null,
+    'type' => 'payment',
+    'sort_order' => $modx->getCount('simpleCartMethod') + 1,
+), 'name', false)) {
+    echo "Error creating cbHasField snippet.\n";
+}
+$bancontact = $modx->getObject('simpleCartMethod', ['name' => 'stripebancontact']);
+if (!$bancontact) {
+    die ('Failed to load or create simplecart_stripebancontact payment method');
+}
+$bancontactId = $bancontact->get('id');
+
+$bancontactProps = array(
+    'currency' => 'EUR',
+    'secret_key' => '',
+    'cart_tpl' => 'scStripeBancontactCart',
+);
+foreach ($bancontactProps as $key => $value) {
+    createObject('simpleCartMethodProperty', [
+        'method' => $bancontactId,
+        'name' => $key,
+        'value' => $value
+    ], ['method', 'name'], false);
+}
+
 $category = $modx->getObject('modCategory', ['category' => 'SimpleCart']);
 $categoryId = $category instanceof modCategory ? $category->get('id') : 0;
 if (!createObject('modChunk', array(
@@ -117,7 +175,7 @@ if (!createObject('modChunk', array(
     'static_file' => $componentPath.'/core/components/simplecart_stripe/elements/chunks/scstripecart.chunk.tpl',
     'category' => $categoryId,
 ), 'name', true)) {
-    echo "Error creating scStripeCart snippet.\n";
+    echo "Error creating scStripeCart chunk.\n";
 }
 if (!createObject('modChunk', array(
     'name' => 'scStripeFooter',
@@ -125,7 +183,15 @@ if (!createObject('modChunk', array(
     'static_file' => $componentPath.'/core/components/simplecart_stripe/elements/chunks/scstripefooter.chunk.tpl',
     'category' => $categoryId,
 ), 'name', true)) {
-    echo "Error creating scStripeCart snippet.\n";
+    echo "Error creating scStripeCart chunk.\n";
+}
+if (!createObject('modChunk', array(
+    'name' => 'scStripeBancontactCart',
+    'static' => true,
+    'static_file' => $componentPath.'/core/components/simplecart_stripe/elements/chunks/scstripebancontactcart.chunk.tpl',
+    'category' => $categoryId,
+), 'name', true)) {
+    echo "Error creating scStripeBancontactCart chunk.\n";
 }
 
 // Refresh the cache

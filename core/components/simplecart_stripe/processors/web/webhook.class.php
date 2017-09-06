@@ -78,10 +78,9 @@ class SimpleCartStripeWebHookProcessor extends modProcessor
                 }
 
                 $order->addLog('[Stripe] Source Chargeable', 'Received webhook, ' . $source['id'] . ' is now chargeable.');
+                $success = $gateway->createCharge($source['id']);
                 $order->set('async_payment_confirmation', false);
                 $order->save();
-
-                $success = $gateway->createCharge($source['id']);
                 if ($success) {
                     http_response_code(200);
                     return json_encode(['processed' => true, 'message' => 'Created charge from source ' . $source['id'] . ' with ID ' . $order->getLog('[Stripe] Charge ID')]);
@@ -95,6 +94,7 @@ class SimpleCartStripeWebHookProcessor extends modProcessor
             case 'source.failed':
                 $order->addLog('[Stripe] Source Error', 'Failed');
                 $order->setStatus('payment_failed');
+                $order->set('async_payment_confirmation', false);
                 $order->save();
 
                 // Acknowledge
@@ -104,6 +104,7 @@ class SimpleCartStripeWebHookProcessor extends modProcessor
             case 'source.cancelled':
                 $order->addLog('[Stripe] Source Error', 'Cancelled');
                 $order->setStatus('payment_failed');
+                $order->set('async_payment_confirmation', false);
                 $order->save();
 
                 // Acknowledge

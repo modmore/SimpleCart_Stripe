@@ -3,7 +3,11 @@
 $_lang['simplecart.methods.payment.stripe'] = 'Stripe';
 $_lang['simplecart.methods.payment.stripe.desc'] = 'Pay by Credit Card.';
 $_lang['simplecart.methods.payment.stripe.orderdesc'] = "You've paid your order with a Credit Card. We successfully received the payment and your order will be processed soon.";
+$_lang['simplecart.methods.payment.stripebancontact'] = 'Bancontact';
+$_lang['simplecart.methods.payment.stripebancontact.desc'] = 'Pay with Bancontact.';
+$_lang['simplecart.methods.payment.stripebancontact.orderdesc'] = "Thank you for your Bancontact payment. We've received the payment and your order will be processed soon.";
 $_lang['simplecart_stripe.credit_or_debit'] = 'Please enter your credit or debit card information.';
+$_lang['simplecart_stripe.bancontact.account_holder'] = 'Account Holder';
 
 // properties
 $_lang['simplecart.methods.payment.stripe.property_currency'] = "Currency";
