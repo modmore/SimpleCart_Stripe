@@ -58,7 +58,7 @@ class SimpleCartStripeShared extends SimpleCartGateway
             $userId = $this->order->get('user_id');
             $user = $this->modx->getObject('modUser', ['id' => $userId]);
             $customerId = '';
-            if ($profile = $user->getOne('Profile')) {
+            if ($user && $profile = $user->getOne('Profile')) {
                 $extended = $profile->get('extended');
                 if (!is_array($extended)) {
                     $extended = [];
