@@ -55,9 +55,10 @@ class SimpleCartStripeShared extends SimpleCartGateway
         $description = $this->getDescription();
 
         try {
-            $user = $this->modx->user;
+            $userId = $this->order->get('user_id');
+            $user = $this->modx->getObject('modUser', ['id' => $userId]);
             $customerId = '';
-            if ($user && $profile = $user->getOne('Profile')) {
+            if ($profile = $user->getOne('Profile')) {
                 $extended = $profile->get('extended');
                 if (!is_array($extended)) {
                     $extended = [];
@@ -73,9 +74,9 @@ class SimpleCartStripeShared extends SimpleCartGateway
                     try {
                         $customer = \Stripe\Customer::create([
                             'email' => $address['email'],
-                            'description' => $address['firstname'] . ' ' . $address['lastname'],
+                            'description' => $address['firstname'] . ' ' . $address['lastname'] . ' (' . $user->get('username') . ')',
                             'metadata' => [
-                                'MODX User ID' => $user->get('id'),
+                                'MODX User ID' => $userId,
                                 'MODX Username' => $user->get('username'),
                             ]
                         ]);
