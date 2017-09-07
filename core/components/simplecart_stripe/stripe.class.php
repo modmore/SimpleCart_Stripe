@@ -48,7 +48,7 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
         if ($source['card']['three_d_secure'] !== 'not_supported') {
             // The card supports 3D Secure
             $use3DS = $source['card']['three_d_secure'] === 'required';
-            if (!$use3DS && $this->getProperty('use_3ds_if_optional', 1)) {
+            if (!$use3DS && (bool)$this->getProperty('use_3ds_if_optional', 1)) {
                 $use3DS = true;
             }
         }

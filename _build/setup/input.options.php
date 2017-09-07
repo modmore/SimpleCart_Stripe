@@ -6,7 +6,7 @@ $fields = array(
 		'name' => 'currency',
 		'label' => 'Currency',
 		'description' => 'The currency used to pay with Stripe. ',
-		'default' => 'USD',
+		'default' => '',
 	),
 	'sc-so-field2' => array(
 		'type' => 'text',
@@ -28,7 +28,8 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
     case xPDOTransport::ACTION_INSTALL:
 		
 		$output = '<div style="width:100%;min-width:100%;margin:-15px;">
-		<table cellspacing="0" cellpadding="0" style="width:100%;">';
+		<table cellspacing="0" cellpadding="0" style="width:100%;">
+		<p><b>IMPORTANT: After installing, you\'ll need to <a href="https://docs.modmore.com/en/SimpleCart/v2.x/Payment_Methods/StripeV2.html#page_Setting+up+the+Gateway" target="_blank" rel="noopener">set up some additional options</a></b> before you can accept payments. <b>This also applies to upgrades from version 1!</b></p>';
 
 		$i = 1;
 		foreach ($fields as $id => $attr) {

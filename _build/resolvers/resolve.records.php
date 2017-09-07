@@ -1,5 +1,18 @@
 <?php
+if (!function_exists('createSimpleCartMethodProperty')) {
+    function createSimpleCartMethodProperty (modX $modx, simpleCartMethod $method, $key, $value) {
 
+        $property = $modx->getObject('simpleCartMethodProperty', array('method' => $method->get('id'), 'name' => $key));
+        if (empty($property)) {
+            $modx->log(modX::LOG_LEVEL_INFO, '... Creating "' . $key . '" property for ' . $method->get('name') . ' method');
+            $property = $modx->newObject('simpleCartMethodProperty');
+            $property->set('method', $method->get('id'));
+            $property->set('name', $key);
+            $property->set('value', $value);
+            $property->save();
+        }
+    }
+}
 /** @var modX|xPDO $modx */
 $modx =& $transport->xpdo;
 $success = false;
@@ -21,81 +34,73 @@ switch($options[xPDOTransport::PACKAGE_ACTION]) {
 
         $modx->log(modX::LOG_LEVEL_INFO, 'Currently ' . $count .' method(s) installed...');
 
-        // create stripe payment method
-		$method = $modx->getObject('simpleCartMethod', array('name' => 'stripe', 'type' => 'payment'));
-		if(empty($method) || !is_object($method)) {
+        // create Stripe payment method
+		$methodStripe = $modx->getObject('simpleCartMethod', array('name' => 'stripe', 'type' => 'payment'));
+		if(empty($methodStripe) || !is_object($methodStripe)) {
 
             $modx->log(modX::LOG_LEVEL_INFO, '... Creating Stripe records');
 
-			$method = $modx->newObject('simpleCartMethod');
-			$method->set('name', 'stripe');
-			$method->set('price_add', null);
-			$method->set('type', 'payment');
-			$method->set('sort_order', ($count+2));
-			$method->set('ignorefree', false);
-			$method->set('allowremarks', false);
-			$method->set('default', false);
-			$method->set('active', false);
-            $method->save();
+			$methodStripe = $modx->newObject('simpleCartMethod');
+			$methodStripe->set('name', 'stripe');
+			$methodStripe->set('price_add', null);
+			$methodStripe->set('type', 'payment');
+			$methodStripe->set('sort_order', ($count+2));
+			$methodStripe->set('ignorefree', false);
+			$methodStripe->set('allowremarks', false);
+			$methodStripe->set('default', false);
+			$methodStripe->set('active', false);
+            $methodStripe->save();
 		}
 
-        $list = array(
-            'currency' => 'USD',
-            'secret_key' => '',
-            'publishable_key' => '',
-            'cart_tpl' => 'scStripeCart',
-            'cart_footer_tpl' => 'scStripeFooter',
-        );
+		createSimpleCartMethodProperty($modx, $methodStripe, 'currency', 'USD');
+		createSimpleCartMethodProperty($modx, $methodStripe, 'secret_key', '');
+		createSimpleCartMethodProperty($modx, $methodStripe, 'publishable_key', '');
+		createSimpleCartMethodProperty($modx, $methodStripe, 'cart_tpl', 'scStripeCart');
+		createSimpleCartMethodProperty($modx, $methodStripe, 'cart_footer_tpl', 'scStripeFooter');
+		createSimpleCartMethodProperty($modx, $methodStripe, 'use_3ds_if_optional', '1');
 
-        foreach ($list as $key => $defaultValue) {
+        // create Bancontact payment method
+		$methodBancontact = $modx->getObject('simpleCartMethod', array('name' => 'stripebancontact', 'type' => 'payment'));
+		if(empty($methodBancontact) || !is_object($methodBancontact)) {
 
-            // add some config records
-            $property = $modx->getObject('simpleCartMethodProperty', array('method' => $method->get('id'), 'name' => $key));
-            if (empty($property) || !is_object($property)) {
+            $modx->log(modX::LOG_LEVEL_INFO, '... Creating Bancontact records');
 
-                $modx->log(modX::LOG_LEVEL_INFO, '... Creating "' . $key . '" property for Stripe method');
+			$methodBancontact = $modx->newObject('simpleCartMethod');
+			$methodBancontact->set('name', 'stripebancontact');
+			$methodBancontact->set('price_add', null);
+			$methodBancontact->set('type', 'payment');
+			$methodBancontact->set('sort_order', ($count+4));
+			$methodBancontact->set('ignorefree', false);
+			$methodBancontact->set('allowremarks', false);
+			$methodBancontact->set('default', false);
+			$methodBancontact->set('active', false);
+            $methodBancontact->save();
+		}
 
-                $property = $modx->newObject('simpleCartMethodProperty');
-                $property->set('method', $method->get('id'));
-                $property->set('name', $key);
-                $property->set('value', $defaultValue);
-                $property->save();
-            }
-        }
+		createSimpleCartMethodProperty($modx, $methodBancontact, 'currency', 'USD');
+		createSimpleCartMethodProperty($modx, $methodBancontact, 'secret_key', '');
 
-        $chunks = array(
-            'scStripeCart',
-            'scStripeFooter'
-        );
+        // create Ideal payment method
+		$methodIdeal = $modx->getObject('simpleCartMethod', array('name' => 'stripeideal', 'type' => 'payment'));
+		if(empty($methodIdeal) || !is_object($methodIdeal)) {
 
-        $categoryId = 0;
-        $category = $modx->getObject('modCategory', array('category' => 'SimpleCart'));
-        if ($category instanceof modCategory) {
-            $categoryId = $category->get('id');
-        }
-        foreach ($chunks as $name) {
-            $chunk = $modx->getObject('modChunk', array('name' => $name));
-            if (!$chunk) {
-                /** @var modChunk $chunk */
-                $chunk = $modx->newObject('modChunk');
-                $chunk->fromArray(array(
-                    'name' => $name,
-                    'description' => 'Part of the Stripe Gateway for SimpleCart',
-                    'static' => true,
-                    'static_file' => '[[++core_path]]components/simplecart_stripe/elements/chunks/' . strtolower($name) . '.chunk.tpl',
-                    'category' => $categoryId,
-                ));
-                if ($chunk->save()) {
-                    $modx->log(modX::LOG_LEVEL_INFO, 'Added ' . $name . ' chunk.');
-                }
-                else {
-                    $modx->log(modX::LOG_LEVEL_ERROR, 'Could not save ' . $name . ' chunk.');
-                }
-            }
-            else {
-                $modx->log(modX::LOG_LEVEL_ERROR, 'Chunk ' . $name . ' already exists.');
-            }
-        }
+            $modx->log(modX::LOG_LEVEL_INFO, '... Creating iDeal records');
+
+			$methodIdeal = $modx->newObject('simpleCartMethod');
+			$methodIdeal->set('name', 'stripeideal');
+			$methodIdeal->set('price_add', null);
+			$methodIdeal->set('type', 'payment');
+			$methodIdeal->set('sort_order', ($count+6));
+			$methodIdeal->set('ignorefree', false);
+			$methodIdeal->set('allowremarks', false);
+			$methodIdeal->set('default', false);
+			$methodIdeal->set('active', false);
+            $methodIdeal->save();
+		}
+
+		createSimpleCartMethodProperty($modx, $methodIdeal, 'currency', 'USD');
+		createSimpleCartMethodProperty($modx, $methodIdeal, 'secret_key', '');
+		createSimpleCartMethodProperty($modx, $methodIdeal, 'cart_tpl', 'scStripeIdealCart');
 
         $success = true;
         break;
@@ -104,10 +109,21 @@ switch($options[xPDOTransport::PACKAGE_ACTION]) {
 
         $modx->log(modX::LOG_LEVEL_INFO, 'Remove Stripe method records...');
 
-        /** @var simpleCartMethod $method */
-        $method = $modx->getObject('simpleCartMethod', array('name' => 'stripe', 'type' => 'payment'));
-		if(!empty($method) || is_object($method)) {
-            $method->remove();
+        /** @var simpleCartMethod $methodStripe */
+        $methodStripe = $modx->getObject('simpleCartMethod', array('name' => 'stripe', 'type' => 'payment'));
+		if(!empty($methodStripe) || is_object($methodStripe)) {
+            $methodStripe->remove();
+        }
+
+        /** @var simpleCartMethod $methodBancontact */
+        $methodBancontact = $modx->getObject('simpleCartMethod', array('name' => 'stripebancontact', 'type' => 'payment'));
+		if(!empty($methodBancontact) || is_object($methodBancontact)) {
+            $methodBancontact->remove();
+        }
+        /** @var simpleCartMethod $methodIdeal */
+        $methodIdeal = $modx->getObject('simpleCartMethod', array('name' => 'stripeideal', 'type' => 'payment'));
+		if(!empty($methodIdeal) || is_object($methodIdeal)) {
+            $methodIdeal->remove();
         }
 
         $success = true;

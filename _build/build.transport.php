@@ -7,8 +7,8 @@ if (!defined('MOREPROVIDER_BUILD')) {
     /* define version */
     define('PKG_NAME', 'SimpleCart Stripe');
     define('PKG_NAMESPACE', 'simplecart_stripe');
-    define('PKG_VERSION', '1.0.0');
-    define('PKG_RELEASE', 'dev1');
+    define('PKG_VERSION', '2.0.0');
+    define('PKG_RELEASE', 'dev2');
 
     /* load modx */
     require_once dirname(dirname(__FILE__)) . '/config.core.php';
@@ -37,102 +37,135 @@ $sources = array(
     'validators' => $root . '_build/validators/',
     'resolvers' => $root . '_build/resolvers/',
     'install_options' => $root . '_build/setup/',
-    'lexicon' => $root . 'core/components/' . PKG_NAME_LOWER . '/lexicon/',
-    'docs' => $root . 'core/components/' . PKG_NAME_LOWER . '/docs/',
-    'source_assets' => $root . 'assets/components/' . PKG_NAME_LOWER . '/',
-    'source_core' => $root . 'core/components/' . PKG_NAME_LOWER . '/',
+    'lexicon' => $root . 'core/components/' . PKG_NAMESPACE . '/lexicon/',
+    'docs' => $root . 'core/components/' . PKG_NAMESPACE . '/docs/',
+    'source_assets' => $root . 'assets/components/' . PKG_NAMESPACE . '/',
+    'source_core' => $root . 'core/components/' . PKG_NAMESPACE . '/',
+    'source_core_root' => $root . 'core/components/',
+    'chunks' => $root . 'core/components/' . PKG_NAMESPACE . '/elements/chunks/'
 );
 unset($root);
 
 
-$modx->loadClass('transport.xPDOTransport', XPDO_CORE_PATH, true, true);
+$modx->loadClass('transport.modPackageBuilder', '', false, true);
+
+/** @var modPackageBuilder $builder * */
+$builder = new modPackageBuilder($modx);
+$builder->directory = $targetDirectory;
+$builder->createPackage(PKG_NAMESPACE, PKG_VERSION, PKG_RELEASE);
+
+// Namespace 1 = simplecart_stripe
+$builder->registerNamespace(PKG_NAMESPACE,false,true,'{core_path}components/'.PKG_NAMESPACE.'/', '{assets_path}components/'.PKG_NAMESPACE.'/');
+$builder->registerNamespace('simplecart_stripebancontact',false,true,'{core_path}components/simplecart_stripebancontact/', '{assets_path}components/simplecart_stripebancontact/');
+$builder->registerNamespace('simplecart_stripeideal',false,true,'{core_path}components/simplecart_stripeideal/', '{assets_path}components/simplecart_stripeideal/');
 
 
-/** @var xPDOTransport $package */
-$package = new xPDOTransport($modx, PKG_NAME_LOWER, $targetDirectory);
-$package->signature = PKG_NAME_LOWER . '-' . PKG_VERSION . '-' . PKG_RELEASE;
+/* @var modCategory $category - add category for our component */
+$category = $modx->newObject('modCategory');
+$category->set('id', 1);
+$category->set('category', PKG_NAME);
 
-$modx->log(xPDO::LOG_LEVEL_INFO, 'Transport package for ' . PKG_NAME. ' created.'); flush();
+/* add chunks */
+$modx->log(modX::LOG_LEVEL_INFO, 'Packaging in chunks...');
+$chunks = include $sources['data'].'transport.chunks.php';
+if (empty($chunks)) $modx->log(modX::LOG_LEVEL_ERROR, 'Could not package in chunks.');
+if (is_array($chunks)) {
+    $category->addMany($chunks);
+}
 
-/* include namespace */
-$namespace = $modx->newObject('modNamespace');
-$namespace->set('name', PKG_NAME_LOWER);
-$namespace->set('path', '{core_path}components/' . PKG_NAME_LOWER . '/');
-$namespace->set('assets_path', '{assets_path}components/' . PKG_NAME_LOWER . '/');
-
-$attributes = array(
-    xPDOTransport::PRESERVE_KEYS => true,
+/* create category vehicle */
+$attr = array(
+    xPDOTransport::UNIQUE_KEY => 'category',
+    xPDOTransport::PRESERVE_KEYS => false,
     xPDOTransport::UPDATE_OBJECT => true,
+    xPDOTransport::RELATED_OBJECTS => true,
+    xPDOTransport::RELATED_OBJECT_ATTRIBUTES => array (
+        'Chunks' => array(
+            xPDOTransport::PRESERVE_KEYS => false,
+            xPDOTransport::UPDATE_OBJECT => true,
+            xPDOTransport::UNIQUE_KEY => 'name',
+        ),
+    ),
 );
-$attributes['validate'][] = array (
-    'type' => 'php',
-    'source' => $sources['validators'] . 'preinstall.script.php',
-);
-$attributes['resolve'][] = array (
-    'type' => 'php',
-    'source' => $sources['resolvers'] . 'resolve.records.php',
-);
-$attributes['resolve'][] = array (
-    'type' => 'php',
-    'source' => $sources['resolvers'] . 'resolve.setup-options.php',
-);
+$vehicle = $builder->createVehicle($category,$attr);
 
-$package->put($namespace, $attributes);
-unset($namespace);
-$modx->log(xPDO::LOG_LEVEL_INFO, 'Namespace "' . PKG_NAME_LOWER . '" packaged.'); flush();
+$modx->log(modX::LOG_LEVEL_INFO,'Adding in Validators...');
+$vehicle->validate('php', array('source' => $sources['validators'] . 'preinstall.script.php'));
+$builder->putVehicle($vehicle);
 
 
-/** @var array $attributes */
+
+/* pack in system settings */
+$modx->log(modX::LOG_LEVEL_INFO,'Adding in System settings...');
+$settings = include $sources['data'].'transport.settings.php';
 $attributes = array(
-    'vehicle_class' => 'xPDOFileVehicle',
+    xPDOTransport::UNIQUE_KEY => 'key',
+    xPDOTransport::PRESERVE_KEYS => true,
+    xPDOTransport::UPDATE_OBJECT => false,
 );
-$attributes['validate'][] = array ( /* validators are running before file resolvers below */
-    'type' => 'php',
-    'source' => $sources['resolvers'] . 'disable-logging.resolver.php',
-);
-$attributes['resolve'][] = array ( /* and resolvers are running after file resolvers below */
-    'type' => 'php',
-    'source' => $sources['resolvers'] . 'enable-logging.resolver.php',
-);
+foreach($settings as $setting) {
+    $vehicle = $builder->createVehicle($setting,$attributes);
+    $builder->putVehicle($vehicle);
+}
+unset($settings, $setting, $attributes);
 
-$files = array();
-$files[] = array(
-    'source' => $sources['source_core'],
-    'target' => "return MODX_CORE_PATH . 'components/';",
-);
-$files[] = array(
+
+
+// Add the validator to check server requirements
+$vehicle->validate('php', array('source' => $sources['validators'] . 'requirements.script.php'));
+
+// Add file resolvers
+$modx->log(modX::LOG_LEVEL_INFO, 'Adding core/assets file resolvers to category...');
+$vehicle->resolve('file',array(
     'source' => $sources['source_assets'],
     'target' => "return MODX_ASSETS_PATH . 'components/';",
-);
+));
+$vehicle->resolve('file',array(
+    'source' => $sources['source_core'],
+    'target' => "return MODX_CORE_PATH . 'components/';",
+));
+$vehicle->resolve('file',array(
+    'source' => $sources['source_core_root'] . 'simplecart_stripebancontact/',
+    'target' => "return MODX_CORE_PATH . 'components/';",
+));
+$vehicle->resolve('file',array(
+    'source' => $sources['source_core_root'] . 'simplecart_stripeideal/',
+    'target' => "return MODX_CORE_PATH . 'components/';",
+));
 
-foreach ($files as $fileset) {
-    $package->put($fileset, $attributes);
-}
-unset ($files, $fileset);
 
-$modx->log(xPDO::LOG_LEVEL_INFO, 'Files for "' . PKG_NAME_LOWER . '" packaged.'); flush();
+$modx->log(modX::LOG_LEVEL_INFO, 'Adding other resolvers...');
 
-/* now pack in the license file, readme and setup options */
-$attributes = array(
+$vehicle->resolve('php', array('source' => $sources['resolvers'].'resolve.records.php'));
+$vehicle->resolve('php', array('source' => $sources['resolvers'].'resolve.setup-options.php'));
+
+// Put it in
+$builder->putVehicle($vehicle);
+unset($vehicle);
+
+
+/* zip up package */
+$modx->log(modX::LOG_LEVEL_INFO,'Adding package attributes and setup options...');
+$builder->setPackageAttributes(array(
+    'license' => file_get_contents($sources['source_core'] . '/docs/license.txt'),
     'readme' => file_get_contents($sources['source_core'] . '/docs/readme.txt'),
     'changelog' => file_get_contents($sources['source_core'] . '/docs/changelog.txt'),
     'setup-options' => array(
         'source' => $sources['install_options'] . 'input.options.php',
     ),
     'requires' => array(
-        'simplecart' => '>=2.2.15',
+        'simplecart' => '>=2.5.0',
     )
-);
-foreach ($attributes as $k => $v) {
-    $package->setAttribute($k, $v);
-}
+));
 
-/* zip up the package */
-$package->pack();
+
+$modx->log(modX::LOG_LEVEL_INFO,'Packing up transport package zip...'); flush();
+$builder->pack();
 
 
 $tend = explode(" ", microtime());
 $tend = $tend[1] + $tend[0];
 $totalTime = sprintf("%2.4f s", ($tend - $tstart));
 
-$modx->log(modX::LOG_LEVEL_INFO, "Package " . $package->signature . " built. Execution time: {$totalTime}\n");
+$modx->log(modX::LOG_LEVEL_INFO, "Package Built. Execution time: {$totalTime}\n");
+$modx->log(modX::LOG_LEVEL_INFO, "\n-----------------------------\nSimpleCart ".PKG_VERSION.'-'.PKG_RELEASE." built\n-----------------------------");

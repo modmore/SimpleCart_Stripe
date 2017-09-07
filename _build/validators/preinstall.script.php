@@ -14,7 +14,6 @@ switch($options[xPDOTransport::PACKAGE_ACTION]) {
         /** @var modTransportPackage $simplecart */
         $simplecart = $modx->getObject('transport.modTransportPackage', array('package_name' => 'SimpleCart', 'installed:IS NOT' => null));
         if(empty($simplecart) || !is_object($simplecart)) {
-
             $modx->log(xPDO::LOG_LEVEL_ERROR, 'Cannot continue installing: Please install the SimpleCart\'s core package first...');
             $success = false;
         }

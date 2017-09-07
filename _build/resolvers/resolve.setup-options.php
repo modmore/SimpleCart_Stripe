@@ -14,9 +14,21 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
         $modelPath = $modx->getOption('simplecart.core_path', null, $modx->getOption('core_path') . 'components/simplecart/') . 'model/';
         $modx->addPackage('simplecart', $modelPath);
 
+        $methods = [];
         /** @var simpleCartMethod $method */
-        $method = $modx->getObject('simpleCartMethod', array('name' => 'stripe', 'type' => 'payment'));
-		if(empty($method) || !is_object($method)) {
+        $method = $modx->getObject('simpleCartMethod', ['name' => 'stripe', 'type' => 'payment']);
+        if ($method) {
+            $methods[] = $method;
+        }
+        $methodBancontact = $modx->getObject('simpleCartMethod', ['name' => 'stripebancontact', 'type' => 'payment']);
+        if ($methodBancontact) {
+            $methods[] = $methodBancontact;
+        }
+        $methodIdeal = $modx->getObject('simpleCartMethod', ['name' => 'stripeideal', 'type' => 'payment']);
+        if ($methodIdeal) {
+            $methods[] = $methodIdeal;
+        }
+		if(count($methods) === 0) {
             $modx->log(modX::LOG_LEVEL_ERROR, '[SimpleCart] Failed to find newly created record for the Stripe payment method');
             return false;
         }
@@ -28,14 +40,14 @@ switch ($options[xPDOTransport::PACKAGE_ACTION]) {
         );
 
         foreach ($configs as $key) {
-            if (isset($options[$key])) {
-
+            if (isset($options[$key]) && !empty($options[$key])) {
                 /** @var simpleCartMethodProperty $property */
-                $property = $modx->getObject('simpleCartMethodProperty', array('method' => $method->get('id'), 'name' => $key));
-                if (!empty($property) && is_object($property)) {
-
-                    $property->set('value', $options[$key]);
-                    $property->save();
+                foreach ($methods as $method) {
+                    $property = $modx->getObject('simpleCartMethodProperty', ['method' => $method->get('id'), 'name' => $key]);
+                    if ($property instanceof simpleCartMethodProperty) {
+                        $property->set('value', $options[$key]);
+                        $property->save();
+                    }
                 }
             }
         }

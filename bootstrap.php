@@ -156,6 +156,7 @@ $props = array(
     'publishable_key' => '',
     'cart_tpl' => 'scStripeCart',
     'cart_footer_tpl' => 'scStripeFooter',
+    'use_3ds_if_optional' => '1',
 );
 foreach ($props as $key => $value) {
     createObject('simpleCartMethodProperty', [
