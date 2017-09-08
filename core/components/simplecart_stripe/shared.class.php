@@ -10,8 +10,7 @@ class SimpleCartStripeShared extends SimpleCartGateway
     public function getAmountInCents()
     {
         $amount = $this->order->get('total');
-        $amount = (int)$amount * 100;
-
+        $amount = (int)($amount * 100);
         return $amount;
     }
 
