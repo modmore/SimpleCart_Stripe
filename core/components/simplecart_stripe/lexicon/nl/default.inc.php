@@ -1,8 +1,27 @@
 <?php
 
-$_lang['simplecart.methods.payment.stripe'] = "Stripe";
-$_lang['simplecart.methods.payment.stripe.desc'] = "Betaal uw order veilig met een Credit Card.";
-$_lang['simplecart.methods.payment.stripe.orderdesc'] = "Uw betaling is met een Credit Card betaald. Wij hebben de betaling succesvol ontvangen en zullen uw order spoedig verwerken.";
+$_lang['simplecart.methods.payment.stripe'] = 'Stripe';
+$_lang['simplecart.methods.payment.stripe.desc'] = 'Betaal met Credit Card.';
+$_lang['simplecart.methods.payment.stripe.orderdesc'] = "Uw bestelling is betaald met een credit card. De betaling is succesvol ontvangen, en uw order zullen we spoedig verwerken.";
+$_lang['simplecart.methods.payment.stripebancontact'] = 'Bancontact';
+$_lang['simplecart.methods.payment.stripebancontact.desc'] = 'Betaal met Bancontact.';
+$_lang['simplecart.methods.payment.stripebancontact.orderdesc'] = "Bedankt voor uw Bancontact betaling. Uw betaling is ontvangen en uw bestelling wordt spoedig verwerkt.";
+$_lang['simplecart.methods.payment.stripeideal'] = 'iDeal';
+$_lang['simplecart.methods.payment.stripeideal.desc'] = 'Online betalen met iDeal.';
+$_lang['simplecart.methods.payment.stripeideal.orderdesc'] = "Bedankt voor uw iDeal betaling. Uw betaling is ontvangen en uw bestelling wordt spoedig verwerkt.";
+$_lang['simplecart_stripe.credit_or_debit'] = 'Voer uw credit of debit card informatie in.';
+$_lang['simplecart_stripe.bancontact.account_holder'] = 'Rekeninghouder';
+$_lang['simplecart_stripe.ideal.bank'] = 'Kies uw bank';
+$_lang['simplecart_stripe.ideal.abn_amro'] = 'ABN Amro'; // Name of a bank, shouldn't be necessary to translate
+$_lang['simplecart_stripe.ideal.bunq'] = 'Bunq'; // Name of a bank, shouldn't be necessary to translate
+$_lang['simplecart_stripe.ideal.asn_bank'] = 'ASN Bank'; // Name of a bank, shouldn't be necessary to translate
+$_lang['simplecart_stripe.ideal.ing'] = 'ING'; // Name of a bank, shouldn't be necessary to translate
+$_lang['simplecart_stripe.ideal.knab'] = 'Knab'; // Name of a bank, shouldn't be necessary to translate
+$_lang['simplecart_stripe.ideal.rabobank'] = 'Rabobank'; // Name of a bank, shouldn't be necessary to translate
+$_lang['simplecart_stripe.ideal.regiobank'] = 'RegioBank'; // Name of a bank, shouldn't be necessary to translate
+$_lang['simplecart_stripe.ideal.sns_bank'] = 'SNS Bank'; // Name of a bank, shouldn't be necessary to translate
+$_lang['simplecart_stripe.ideal.triodos_bank'] = 'Triodos Bank'; // Name of a bank, shouldn't be necessary to translate
+$_lang['simplecart_stripe.ideal.van_lanschot'] = 'Van Lanschot'; // Name of a bank, shouldn't be necessary to translate
 
 // properties
 $_lang['simplecart.methods.payment.stripe.property_currency'] = "Valuta";
