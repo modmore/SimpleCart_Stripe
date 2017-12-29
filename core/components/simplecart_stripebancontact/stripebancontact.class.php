@@ -19,6 +19,10 @@ class SimpleCartStripeBancontactPaymentGateway extends SimpleCartStripeShared
         // Get the description
         $description = $this->getDescription();
 
+        // Get the language
+        $lang = $this->getProperty('language', 'en');
+        $lang = strtolower($lang);
+
         /** @var array $address */
         $address = $this->order->getAddress();
         // Create a bancontact source
@@ -28,6 +32,9 @@ class SimpleCartStripeBancontactPaymentGateway extends SimpleCartStripeShared
                 'currency' => $currency,
                 'statement_descriptor' => $description,
                 'type' => 'bancontact',
+                'bancontact' => [
+                    'preferred_language' => $lang,
+                ],
                 'owner' => [
                     'name' => is_array($address) ? $address['firstname'] . ' ' . $address['lastname'] : '',
                     'email' => is_array($address) ? $address['email'] : '',

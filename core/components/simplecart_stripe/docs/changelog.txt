@@ -1,3 +1,8 @@
+++ Stripe Gateway for SimpleCart v2.0.0-pl
+++ Released on 2017-12-29
++++++++++++++++++++++++++++++++++++++++++++
+- Add language property to the Bancontact gateway to set the preferred language
+
 ++ Stripe Gateway for SimpleCart v2.0.0-rc1
 ++ Released on 2017-12-08
 +++++++++++++++++++++++++++++++++++++++++++

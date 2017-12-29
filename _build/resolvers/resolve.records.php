@@ -79,6 +79,7 @@ switch($options[xPDOTransport::PACKAGE_ACTION]) {
 
 		createSimpleCartMethodProperty($modx, $methodBancontact, 'currency', 'USD');
 		createSimpleCartMethodProperty($modx, $methodBancontact, 'secret_key', '');
+		createSimpleCartMethodProperty($modx, $methodBancontact, 'language', 'en');
 
         // create Ideal payment method
 		$methodIdeal = $modx->getObject('simpleCartMethod', array('name' => 'stripeideal', 'type' => 'payment'));
