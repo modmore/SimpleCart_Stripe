@@ -1,17 +1,17 @@
 <?php
 
 $_lang['simplecart.methods.payment.stripe'] = 'Stripe';
-$_lang['simplecart.methods.payment.stripe.desc'] = 'Pay by Credit Card.';
-$_lang['simplecart.methods.payment.stripe.orderdesc'] = "You've paid your order with a Credit Card. We successfully received the payment and your order will be processed soon.";
+$_lang['simplecart.methods.payment.stripe.desc'] = 'Mit Kreditkarte bezahlen.';
+$_lang['simplecart.methods.payment.stripe.orderdesc'] = "Sie haben Ihre Bestellung mit einer Kreditkarte bezahlt. Wir haben die Zahlung erhalten und werden Ihren Auftrag in Kürze bearbeiten.";
 $_lang['simplecart.methods.payment.stripebancontact'] = 'Bancontact';
-$_lang['simplecart.methods.payment.stripebancontact.desc'] = 'Pay with Bancontact.';
-$_lang['simplecart.methods.payment.stripebancontact.orderdesc'] = "Thank you for your Bancontact payment. We've received the payment and your order will be processed soon.";
+$_lang['simplecart.methods.payment.stripebancontact.desc'] = 'Mit Bancontact bezahlen.';
+$_lang['simplecart.methods.payment.stripebancontact.orderdesc'] = "Vielen Dank für Ihre Bezahlung via Bancontact. Wir haben die Zahlung erhalten und werden Ihren Auftrag in Kürze bearbeiten.";
 $_lang['simplecart.methods.payment.stripeideal'] = 'iDeal';
-$_lang['simplecart.methods.payment.stripeideal.desc'] = 'Pay online with iDeal.';
-$_lang['simplecart.methods.payment.stripeideal.orderdesc'] = "Thank you for your iDeal payment. We've received the payment and your order will be processed soon.";
-$_lang['simplecart_stripe.credit_or_debit'] = 'Please enter your credit or debit card information.';
-$_lang['simplecart_stripe.bancontact.account_holder'] = 'Account Holder';
-$_lang['simplecart_stripe.ideal.bank'] = 'Choose your Bank';
+$_lang['simplecart.methods.payment.stripeideal.desc'] = 'Online bezahlen mit iDeal.';
+$_lang['simplecart.methods.payment.stripeideal.orderdesc'] = "Vielen Dank für Ihre Bezahlung via iDeal. Wir haben die Zahlung erhalten und werden Ihren Auftrag in Kürze bearbeiten.";
+$_lang['simplecart_stripe.credit_or_debit'] = 'Bitte geben Sie Ihre Kredit- oder Debitkarten-Informationen ein.';
+$_lang['simplecart_stripe.bancontact.account_holder'] = 'Kontoinhaber';
+$_lang['simplecart_stripe.ideal.bank'] = 'Wählen Sie Ihre Bank';
 $_lang['simplecart_stripe.ideal.abn_amro'] = 'ABN AMRO'; // Name of a bank, shouldn't be necessary to translate
 $_lang['simplecart_stripe.ideal.bunq'] = 'Bunq'; // Name of a bank, shouldn't be necessary to translate
 $_lang['simplecart_stripe.ideal.asn_bank'] = 'ASN Bank'; // Name of a bank, shouldn't be necessary to translate
@@ -20,7 +20,7 @@ $_lang['simplecart_stripe.ideal.knab'] = 'Knab'; // Name of a bank, shouldn't be
 $_lang['simplecart_stripe.ideal.rabobank'] = 'Rabobank'; // Name of a bank, shouldn't be necessary to translate
 $_lang['simplecart_stripe.ideal.regiobank'] = 'RegioBank'; // Name of a bank, shouldn't be necessary to translate
 $_lang['simplecart_stripe.ideal.sns_bank'] = 'SNS Bank'; // Name of a bank, shouldn't be necessary to translate
-$_lang['simplecart_stripe.ideal.triodos_bank'] = 'Triodos Bank'; // Name of a bank, shouldn't be necessary to translate
+$_lang['simplecart_stripe.ideal.triodos_bank'] = 'Tridos Bank'; // Name of a bank, shouldn't be necessary to translate
 $_lang['simplecart_stripe.ideal.van_lanschot'] = 'Van Lanschot'; // Name of a bank, shouldn't be necessary to translate
 
 // properties
