@@ -168,4 +168,4 @@ $tend = $tend[1] + $tend[0];
 $totalTime = sprintf("%2.4f s", ($tend - $tstart));
 
 $modx->log(modX::LOG_LEVEL_INFO, "Package Built. Execution time: {$totalTime}\n");
-$modx->log(modX::LOG_LEVEL_INFO, "\n-----------------------------\nSimpleCart ".PKG_VERSION.'-'.PKG_RELEASE." built\n-----------------------------");
+$modx->log(modX::LOG_LEVEL_INFO, "\n-----------------------------\n".PKG_NAME . ' ' . PKG_VERSION.'-'.PKG_RELEASE." built\n-----------------------------");
