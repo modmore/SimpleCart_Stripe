@@ -23,6 +23,9 @@
         checkoutFormCard.addEventListener('submit', function(event) {
             if (checkoutFormCard.paymentMethod.value == [[+method_id]]) {
                 event.preventDefault();
+                for (var i = 0; i < btns.length; i++) {
+                    btns[i].setAttribute('disabled', 'disabled');
+                }
                 displayErrorCard.textContent = '';
                 StripeInstanceCard.handleCardPayment(
                     '[[+intent_secret]]', StripeCardCard, {
@@ -56,18 +59,6 @@
                         submitForm();
                     }
                 });
-                // var ownerInfo = {
-                //     owner: {
-                //         name: _getValue('firstname') + ' ' + _getValue('lastname'),
-                //         address: {
-                //             line1: _getValue('street') ? _getValue('street') + _getValue('number') : _getValue('address1'),
-                //             city: _getValue('city'),
-                //             postal_code: _getValue('zip'),
-                //             country: _getValue('country')
-                //         },
-                //         email: _getValue('email')
-                //     }
-                // };
 
 //                 Disable the submit button to prevent repeated clicks
 //                $form.find('button').attr('disabled', true);
