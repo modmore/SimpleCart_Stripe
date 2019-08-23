@@ -1,15 +1,19 @@
 <?php
 
+use Stripe\PaymentIntent;
+
 require_once __DIR__ . '/shared.class.php';
 
 class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
 {
     public function view() {
+        $this->initStripe();
         $tpl = $this->getProperty('cart_tpl', 'scStripeCart');
         $footerTpl = $this->getProperty('cart_footer_tpl', 'scStripeFooter');
         $phs = array(
             'publishable_key' => addslashes($this->getProperty('publishable_key', 'ENTER YOUR KEY')),
             'method_id' => $this->method->get('id'),
+            'intent_secret' => $this->getPaymentIntent(true)->client_secret,
         );
 
         $head = $this->simplecart->getChunk($footerTpl, $phs);
@@ -18,96 +22,107 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
         return $this->simplecart->getChunk($tpl, $phs);
     }
 
+    public function getPaymentIntent($view = false)
+    {
+        // If we have an existing intent, use it
+        $id = $_SESSION['stripe_payment_intent'];
+
+        $intent = null;
+        if ($id) {
+            $intent = PaymentIntent::retrieve($id);
+        }
+
+        $intentData = [
+            'currency' => $this->getProperty('currency', 'EUR'),
+            'description' => $this->modx->getOption('site_name'),
+            'metadata' => [
+//                'order_id' => $order->get('id'),
+//                'order_reference' => $order->get('reference') ?: 'n/a',
+//                'user_id' => (int)$order->get('user'),
+//                'context' => $order->get('context'),
+            ]
+        ];
+        if ($this->order instanceof simpleCartOrder) {
+            $this->modx->lexicon->load('simplecart_stripe:default');
+            $intentData['description'] = $this->modx->lexicon('simplecart_stripe.payment_desc', [
+                'ordernr' => $this->order->get('ordernr'),
+                'site_name' => $this->modx->getOption('site_name'),
+            ]);
+            $intentData['metadata']['order_id'] = $this->order->get('id');
+            $intentData['metadata']['order_nr'] = $this->order->get('ordernr');
+        }
+        if (($user = $this->modx->getUser()) && ($user->get('id') > 0)) {
+            $intentData['metadata']['user_id'] = $user->get('id');
+        }
+
+//        if ($customer = $this->getCustomer($order)) {
+//            $intentData['customer'] = $customer->id;
+//        }
+
+        $intentData['amount'] = round(($this->method->cartTotal * 100) + ($this->method->priceAdd * 100));
+
+        // Create the intent if it doesn't exist or was cancelled
+        if (!$intent || $intent->status === 'canceled' || ($view && $intent->status === 'succeeded')) {
+            $intent = PaymentIntent::create($intentData);
+        }
+        // Update description and metadata on success
+        elseif ($intent->status === 'succeeded') {
+            PaymentIntent::update($id, [
+                'description' => $intentData['description'],
+                'metadata' => $intentData['metadata']
+            ]);
+        }
+        // Make sure all info is up-to-date otherwise
+        else {
+            PaymentIntent::update($id, $intentData);
+        }
+
+        // Store the intent ID in session for later access
+        $_SESSION['stripe_payment_intent'] = $intent->id;
+
+        // And in the order when available
+        if ($this->order) {
+            $this->order->addLog('[Stripe] Payment Intent', $intent->id, true);
+        }
+
+        return $intent;
+    }
+
     public function submit() {
         if (!$this->initStripe()) {
             return false;
         }
 
-        $sourceId = $this->getField('stripeSource');
-        if (empty($sourceId)) {
-            $this->order->addLog('[Stripe] Source', 'Not submitted');
-            $this->order->set('status', 'payment_failed');
-            $this->order->save();
+        $intent = $this->getPaymentIntent();
+        if (!$intent) {
             return false;
         }
-        $this->order->addLog('[Stripe] Source', $sourceId);
 
-        // SimpleCart stores totals in decimal values, so we need to turn that into cents for Stripe
-        $amount = $this->getAmountInCents();
-
-        // Get the currency
-        $currency = $this->getProperty('currency', 'EUR');
-        $currency = strtolower($currency);
-
-        // Get the description
-        $description = $this->getDescription();
-
-        $source = \Stripe\Source::retrieve($sourceId);
-
-        $use3DS = false;
-        if ($source['card']['three_d_secure'] !== 'not_supported') {
-            // The card supports 3D Secure
-            $use3DS = $source['card']['three_d_secure'] === 'required';
-            if (!$use3DS && (bool)$this->getProperty('use_3ds_if_optional', 1)) {
-                $use3DS = true;
-            }
+        if ($intent->status === 'requires_confirmation') {
+            $this->order->addLog('[Stripe] Payment Intent RQ', 'Attempting to confirm payment intent');
+            $this->modx->log(2, 'Payment Intent status is requires_confirmation; attempting to confirm ' . $intent->id . ' with parameters: ' . $intent->serializeParameters());
+            $intent->confirm();
         }
 
-        $this->order->addLog('[Stripe] 3DS Support', $source['card']['three_d_secure']);
+        $this->order->addLog('[Stripe] Submit Status', $intent->status);
 
-        // If we go ahead and use 3DS, create a new source of type three_d_secure
-        if ($use3DS) {
-            try {
-                $source = \Stripe\Source::create([
-                    'amount' => $amount, // amount in cents
-                    'currency' => $currency,
-                    'statement_descriptor' => $description,
-                    'type' => 'three_d_secure',
-                    'three_d_secure' => array(
-                        'card' => $sourceId,
-                    ),
-                    'metadata' => [
-                        'order_nr' => $this->order->get('ordernr'),
-                        'order_id' => $this->order->get('id'),
-                    ],
-                    'redirect' => array(
-                        'return_url' => $this->getRedirectUrl(),
-                    ),
-                ]);
-                $this->order->addLog('[Stripe] 3DS Source', $source['id']);
-                $this->order->save();
-            } catch (\Stripe\Error\Card $e) {
-                // The card has been declined
-                $this->order->addLog('[Stripe] 3DS Card Declined', $e->getMessage());
-                $this->order->set('status', 'payment_failed');
-                $this->order->save();
+        return $intent->status === 'succeeded';
+    }
 
-                return false;
-            } catch (\Stripe\Error\Base $e) {
-                $this->order->addLog('[Stripe] 3DS Error', $e->getMessage());
-                $this->order->set('status', 'payment_failed');
-                $this->order->save();
+    public function verify()
+    {
+        $this->initStripe();
 
-                return false;
-            } catch (Exception $e) {
-                $this->order->addLog('Uncaught Exception', $e->getMessage());
-                $this->order->set('status', 'payment_failed');
-                $this->order->save();
-
-                return false;
-            }
-
-            // Redirect the customer to the 3DS page
-            if (!empty($source['redirect']) && !empty($source['redirect']['url'])) {
-                $this->order->addLog('[Stripe] Redirecting for 3DS', $source['redirect']['url']);
-                $this->order->set('async_payment_confirmation', true);
-                $this->order->save();
-                $this->modx->sendRedirect($source['redirect']['url']);
-            }
+        $intent = $this->getPaymentIntent();
+        if ($intent && $intent->status === 'succeeded') {
+            $this->order->addLog('[Stripe] Verify Status', $intent->status);
+            $this->order->setStatus('finished');
+            $this->order->save();
+            return true;
         }
-
-        // If we made it here, either 3DS failed, or 3DS isn't supported.
-        // So we do a normal charge.
-        return $this->createCharge($sourceId);
+        $this->order->addLog('[Stripe] Verify Status', $intent ? $intent->status : 'Intent not found');
+        $this->order->setStatus('payment_failed');
+        $this->order->save();
+        return false;
     }
 }

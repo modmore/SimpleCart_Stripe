@@ -34,6 +34,7 @@ class SimpleCartStripeShared extends SimpleCartGateway
         }
 
         \Stripe\Stripe::setApiKey($key);
+        \Stripe\Stripe::setAppInfo('SimpleCart/Stripe', (string)$this->simplecart->version, 'https://www.modmore.com/simplecart/');
         return true;
     }
 
