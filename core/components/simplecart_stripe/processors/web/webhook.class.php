@@ -39,6 +39,14 @@ class SimpleCartStripeWebHookProcessor extends modProcessor
 
 
         $type = $event['type'];
+
+        if (in_array($type, ['payment_intent.succeeded', 'payment_intent.payment_failed'], true)) {
+            // Return a 200 response to indicate the hook was received properly
+            http_response_code(200);
+            // But send a response that indicates the event type isn't supported
+            return json_encode(['processed' => false, 'message' => 'While the webhook event has been received, SimpleCart does not currently support async Payment Intent confirmations because when the intent is created (view) there is no identifiable order information we can provide to the payment intent data.']);
+        }
+
         if (!in_array($type, [
             'source.chargeable',
             'source.failed',
