@@ -1,3 +1,6 @@
+++ Stripe Gateway for SimpleCart v3.0.0-rc1
+++ Released on 2019-09-05
++++++++++++++++++++++++++++++++++++++++++++
 - Update the Card gateway to Payment Intents to be ready for Secure Customer Authentication (aka 3D Secure 2.0)
 - More customer billing information is now provided to Stripe and visible in the Stripe dashboard
 
