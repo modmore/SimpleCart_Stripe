@@ -1,17 +1,20 @@
-++ Stripe Gateway for SimpleCart v3.0.0-rc1
-++ Released on 2019-09-05
-+++++++++++++++++++++++++++++++++++++++++++
+Stripe Gateway for SimpleCart v3.0.0-rc1
+----------------------------------------
+Released on 2019-09-05
+
 - Update the Card gateway to Payment Intents to be ready for Secure Customer Authentication (aka 3D Secure 2.0)
 - More customer billing information is now provided to Stripe and visible in the Stripe dashboard
 
-++ Stripe Gateway for SimpleCart v2.0.0-pl
-++ Released on 2017-12-29
-+++++++++++++++++++++++++++++++++++++++++++
+Stripe Gateway for SimpleCart v2.0.0-pl
+---------------------------------------
+Released on 2017-12-29
+
 - Add language property to the Bancontact gateway to set the preferred language
 
-++ Stripe Gateway for SimpleCart v2.0.0-rc1
-++ Released on 2017-12-08
-+++++++++++++++++++++++++++++++++++++++++++
+Stripe Gateway for SimpleCart v2.0.0-rc1
+----------------------------------------
+Released on 2017-12-08
+
 - Move from Stripe.js v2 to v3
 - Now uses Stripe Elements (type: card) for building the UI
 - New gateway: Stripe Bancontact
@@ -19,13 +22,15 @@
 - The integration no longer depends on jQuery, instead uses VanillaJS (IE9+)
 - Please see https://docs.modmore.com/en/SimpleCart/v2.x/Payment_Methods/StripeV2.html for setup instructions
 
-++ Stripe Gateway for SimpleCart v1.0.0-pl
-++ Released on 2015-08-21
-+++++++++++++++++++++++++++++++++++++++++++
+Stripe Gateway for SimpleCart v1.0.0-pl
+---------------------------------------
+Released on 2015-08-21
+
 - Fix description not being processed properly
 - Add SimpleCart as dependency for MODX Revolution 2.4+
 
-++ Stripe Gateway for SimpleCart v1.0.0-rc1
-++ Released on 2015-06-19
-+++++++++++++++++++++++++++++++++++++++++++
+Stripe Gateway for SimpleCart v1.0.0-rc1
+----------------------------------------
+Released on 2015-06-19
+
 - Initial release
