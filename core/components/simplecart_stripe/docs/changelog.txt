@@ -1,3 +1,5 @@
+- Take extra care to not allow submitting the payment form if the billing address isn't filled [S20852]
+
 Stripe Gateway for SimpleCart v3.0.0-rc1
 ----------------------------------------
 Released on 2019-09-05

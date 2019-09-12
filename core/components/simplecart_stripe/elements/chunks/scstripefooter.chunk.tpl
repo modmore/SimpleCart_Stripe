@@ -21,52 +21,69 @@
         });
 
         checkoutFormCard.addEventListener('submit', function(event) {
-            if (checkoutFormCard.paymentMethod.value == [[+method_id]]) {
-                event.preventDefault();
-                for (var i = 0; i < btns.length; i++) {
-                    btns[i].setAttribute('disabled', 'disabled');
-                }
-                displayErrorCard.textContent = '';
-                StripeInstanceCard.handleCardPayment(
-                    '[[+intent_secret]]', StripeCardCard, {
-                        payment_method_data: {
-                            billing_details: {
-                                name: cardholderName.value,
-                                address: {
-                                    line1: _getValue('street') ? _getValue('street') + _getValue('number') : _getValue('address1'),
-                                    city: _getValue('city'),
-                                    postal_code: _getValue('zip'),
-                                    country: _getValue('country')
-                                },
-                                email: _getValue('email')
-                            }
-                        }
-                    }
-                ).then(function(result) {
-                    if (result.error) {
-                        // If we somehow have an already-confirmed payment intent, submit to the server to validate
-                        if (result.error.payment_intent && result.error.payment_intent.status === 'succeeded') {
-                            submitForm();
-                        }
-                        else {
-                            displayErrorCard.textContent = result.error.message;
-                            // Re-enable buttons
-                            for (var j = 0; j < btns.length; j++) {
-                                btns[j].removeAttribute('disabled');
-                            }
-                        }
-                    } else {
-                        submitForm();
-                    }
-                });
+            if (checkoutFormCard.paymentMethod.value != [[+method_id]]) {
+                return;
+            }
 
-//                 Disable the submit button to prevent repeated clicks
-//                $form.find('button').attr('disabled', true);
+            event.preventDefault();
 
-                // Prevent the form from submitting with the default action
+            if (checkoutFormCard.checkValidity && !checkoutFormCard.checkValidity()) {
+                displayErrorCard.textContent = 'Please correct the errors in the form before attempting to complete payment.';
                 return false;
             }
 
+            var address = {
+                line1: _getValue('street') ? _getValue('street') + ' ' + _getValue('number') : _getValue('address1'),
+                city: _getValue('city'),
+                postal_code: _getValue('zip'),
+                country: _getValue('country')
+            };
+            var email = _getValue('email');
+
+            if (address.line1.length < 2
+                || !address.city.length
+                || !address.postal_code.length
+                || !address.country.length) {
+                displayErrorCard.textContent = 'Please enter your billing address.';
+                return false;
+            }
+
+            // Disable buttons and empty error block
+            for (var i = 0; i < btns.length; i++) {
+                btns[i].setAttribute('disabled', 'disabled');
+            }
+            displayErrorCard.textContent = '';
+
+            // Talk to Stripe to get a secure token
+            StripeInstanceCard.handleCardPayment(
+                '[[+intent_secret]]', StripeCardCard, {
+                    payment_method_data: {
+                        billing_details: {
+                            name: cardholderName.value,
+                            address: address,
+                            email: email
+                        }
+                    }
+                }
+            ).then(function(result) {
+                if (result.error) {
+                    // If we somehow have an already-confirmed payment intent, submit to the server to validate
+                    if (result.error.payment_intent && result.error.payment_intent.status === 'succeeded') {
+                        submitForm();
+                    }
+                    else {
+                        displayErrorCard.textContent = result.error.message;
+                        // Re-enable buttons
+                        for (var j = 0; j < btns.length; j++) {
+                            btns[j].removeAttribute('disabled');
+                        }
+                    }
+                } else {
+                    submitForm();
+                }
+            });
+
+            // Prevent the form from submitting with the default action
             return false;
         });
 
