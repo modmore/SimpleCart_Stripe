@@ -19,11 +19,12 @@ class SimpleCartStripeShared extends SimpleCartGateway
      */
     public function getDescription()
     {
-        $content = $this->modx->lexicon('simplecart.methods.yourorderat');
-        $chunk = $this->modx->newObject('modChunk');
-        $chunk->setCacheable(false);
-        $chunk->setContent($content);
-        return $chunk->process();
+        return $this->modx->lexicon('simplecart.methods.yourorderat', array(
+            'site_name' => $this->modx->getOption('site_name'),
+            '+site_name' => $this->modx->getOption('site_name'),
+            'site_url' => $this->modx->getOption('site_url'),
+            'ordernr' => $this->order->get('ordernr'),
+        ));
     }
 
     public function initStripe() {
