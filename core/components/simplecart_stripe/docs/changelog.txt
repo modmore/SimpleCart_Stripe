@@ -1,3 +1,7 @@
+Stripe Gateway for SimpleCart v3.0.0-pl
+----------------------------------------
+Released on 2019-09-12
+
 - For source-based payments, validate customer before passing it along into a charge [#131]
 - Update description for source-based payments to include the order number (update to SimpleCart 2.7)
 
