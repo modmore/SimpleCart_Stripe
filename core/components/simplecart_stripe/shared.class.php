@@ -58,20 +58,27 @@ class SimpleCartStripeShared extends SimpleCartGateway
         try {
             $userId = $this->order->get('user_id');
             $user = $this->modx->getObject('modUser', ['id' => $userId]);
-            $customerId = '';
+
+            $customer = null;
             if ($user && $profile = $user->getOne('Profile')) {
                 $extended = $profile->get('extended');
                 if (!is_array($extended)) {
                     $extended = [];
                 }
+
                 if (!empty($extended['stripe_customer_id'])) {
                     $customerId = $extended['stripe_customer_id'];
+                    try {
+                        $customer = \Stripe\Customer::retrieve($customerId);
+                    } catch (\Stripe\Error\Base $e) {
+                        $this->order->addLog('[Stripe] Existing Customer Error', $e->getMessage());
+                        $this->order->save();
+                    }
                 }
 
                 /** @var array $address */
                 $address = $this->order->getAddress();
-                if (is_array($address) && empty($customerId)) {
-                    $customer = null;
+                if (is_array($address) && !$customer) {
                     try {
                         $customer = \Stripe\Customer::create([
                             'email' => $address['email'],
@@ -82,28 +89,21 @@ class SimpleCartStripeShared extends SimpleCartGateway
                             ]
                         ]);
                     } catch (\Stripe\Error\Base $e) {
-                        $this->order->addLog('[Stripe] Customer Error', $e->getMessage());
+                        $this->order->addLog('[Stripe] Customer Create Error', $e->getMessage());
                         $this->order->save();
-                    }
-
-                    if ($customer) {
-                        $customerId = $customer['id'];
-                        $extended['stripe_customer_id'] = $customerId;
-                        $profile->set('extended', $extended);
-                        $profile->save();
                     }
                 }
             }
 
-            if (!empty($customerId)) {
-                $this->order->addLog('[Stripe] Customer ID', $customerId);
+            if (!empty($customer)) {
+                $this->order->addLog('[Stripe] Customer ID', $customer->id);
             }
 
             $charge = \Stripe\Charge::create([
                 'amount' => $amount, // amount in cents
                 'currency' => $currency,
                 'source' => $sourceId,
-                'customer' => !empty($customerId) ? $customerId : null,
+                'customer' => $customer ? $customer->id : null,
                 'description' => $description,
                 'metadata' => [
                     'order_nr' => $this->order->get('ordernr'),

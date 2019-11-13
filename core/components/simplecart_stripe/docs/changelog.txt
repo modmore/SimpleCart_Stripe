@@ -1,3 +1,5 @@
+- For source-based payments, validate customer before passing it along into a charge [#131]
+
 Stripe Gateway for SimpleCart v3.0.0-rc2
 ----------------------------------------
 Released on 2019-09-12
