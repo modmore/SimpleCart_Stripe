@@ -132,10 +132,10 @@ class SimpleCartStripeShared extends SimpleCartGateway
         $this->order->addLog('[Stripe] Charge ID', $charge['id']);
 //        $this->order->addLog('[Stripe] Card', $charge['source']['brand'] . ' ' . $charge['source']['last4']);
         $this->order->setStatus('finished');
+        $this->order->save();
         if (!$this->order->get('confirmation_sent')) {
             $this->order->resendConfirmation();
         }
-        $this->order->save();
         return true;
     }
 
