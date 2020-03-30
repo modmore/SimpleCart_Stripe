@@ -138,6 +138,7 @@ $modx->log(modX::LOG_LEVEL_INFO, 'Adding other resolvers...');
 
 $vehicle->resolve('php', array('source' => $sources['resolvers'].'resolve.records.php'));
 $vehicle->resolve('php', array('source' => $sources['resolvers'].'resolve.setup-options.php'));
+$vehicle->resolve('php', array('source' => $sources['resolvers'].'resolve.certbundle.php'));
 
 // Put it in
 $builder->putVehicle($vehicle);
