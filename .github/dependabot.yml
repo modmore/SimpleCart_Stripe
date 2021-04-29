@@ -1,0 +1,11 @@
+version: 2
+updates:
+- package-ecosystem: composer
+  directory: "/core/components/simplecart_stripe"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: stripe/stripe-php
+    versions:
+    - ">= 7.a, < 8"
