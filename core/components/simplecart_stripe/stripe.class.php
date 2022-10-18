@@ -26,6 +26,9 @@ class SimpleCartStripePaymentGateway extends SimpleCartStripeShared
     {
         // If we have an existing intent, use it
         $id = $_SESSION['stripe_payment_intent'];
+        if (empty($id) && $this->order) {
+            $id = $this->order->getLog('[Stripe] Payment Intent');
+        }
 
         $intent = null;
         if ($id) {
