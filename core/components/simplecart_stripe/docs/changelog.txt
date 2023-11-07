@@ -1,4 +1,4 @@
-Stripe Gateway for SimpleCart v3.0.2-pl
+Stripe Gateway for SimpleCart v3.0.3-pl
 ----------------------------------------
 Released on 2023-11-07
 
