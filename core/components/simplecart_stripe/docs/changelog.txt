@@ -1,5 +1,11 @@
 Stripe Gateway for SimpleCart v3.0.2-pl
 ----------------------------------------
+Released on 2023-11-07
+
+- Update SDK to v7 to hopefully fix issues with PHP8 [S38048, stripe/stripe-php#1125]
+
+Stripe Gateway for SimpleCart v3.0.2-pl
+----------------------------------------
 Released on 2022-10-18
 
 - Fix trying to create a new payment intent when resending order confirmation

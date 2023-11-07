@@ -1,4 +1,7 @@
 <?php
+
+use Stripe\Exception\SignatureVerificationException;
+
 class SimpleCartStripeWebHookProcessor extends modProcessor
 {
     public function process() {
@@ -27,11 +30,11 @@ class SimpleCartStripeWebHookProcessor extends modProcessor
             $event = \Stripe\Webhook::constructEvent(
                 $payload, $sig_header, $endpoint_secret
             );
-        } catch(\UnexpectedValueException $e) {
+        } catch(UnexpectedValueException $e) {
             // Invalid payload
             http_response_code(400);
             return json_encode(['processed' => false, 'message' => 'Invalid payload']);
-        } catch(\Stripe\Error\SignatureVerification $e) {
+        } catch(SignatureVerificationException $e) {
             // Invalid signature
             http_response_code(400);
             return json_encode(['processed' => false, 'message' => 'Invalid signature']);

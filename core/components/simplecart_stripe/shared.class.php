@@ -1,5 +1,9 @@
 <?php
 
+use Stripe\Charge;
+use Stripe\Exception\ApiErrorException;
+use Stripe\Exception\CardException;
+
 require __DIR__ . '/vendor/autoload.php';
 
 class SimpleCartStripeShared extends SimpleCartGateway
@@ -70,7 +74,7 @@ class SimpleCartStripeShared extends SimpleCartGateway
                     $customerId = $extended['stripe_customer_id'];
                     try {
                         $customer = \Stripe\Customer::retrieve($customerId);
-                    } catch (\Stripe\Error\Base $e) {
+                    } catch (ApiErrorException $e) {
                         $this->order->addLog('[Stripe] Existing Customer Error', $e->getMessage());
                         $this->order->save();
                     }
@@ -88,7 +92,7 @@ class SimpleCartStripeShared extends SimpleCartGateway
                                 'MODX Username' => $user->get('username'),
                             ]
                         ]);
-                    } catch (\Stripe\Error\Base $e) {
+                    } catch (ApiErrorException $e) {
                         $this->order->addLog('[Stripe] Customer Create Error', $e->getMessage());
                         $this->order->save();
                     }
@@ -99,7 +103,7 @@ class SimpleCartStripeShared extends SimpleCartGateway
                 $this->order->addLog('[Stripe] Customer ID', $customer->id);
             }
 
-            $charge = \Stripe\Charge::create([
+            $charge = Charge::create([
                 'amount' => $amount, // amount in cents
                 'currency' => $currency,
                 'source' => $sourceId,
@@ -110,13 +114,13 @@ class SimpleCartStripeShared extends SimpleCartGateway
                     'order_id' => $this->order->get('id'),
                 ],
             ]);
-        } catch(\Stripe\Error\Card $e) {
+        } catch(CardException $e) {
             // The card has been declined
             $this->order->addLog('[Stripe] Error', 'Card Declined: ' . $e->getMessage());
             $this->order->set('status', 'payment_failed');
             $this->order->save();
             return false;
-        } catch(\Stripe\Error\Base $e) {
+        } catch(ApiErrorException $e) {
             $this->order->addLog('[Stripe] Error', $e->getMessage());
             $this->order->set('status', 'payment_failed');
             $this->order->save();
@@ -158,8 +162,8 @@ class SimpleCartStripeShared extends SimpleCartGateway
         }
 
         try {
-            $charge = \Stripe\Charge::retrieve($chargeId);
-        } catch (\Exception $e) {
+            $charge = Charge::retrieve($chargeId);
+        } catch (Exception $e) {
             $this->order->addLog('[Stripe] Verify Fail', $e->getMessage());
             $this->order->save();
             return false;

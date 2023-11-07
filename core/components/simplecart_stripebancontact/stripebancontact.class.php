@@ -1,5 +1,9 @@
 <?php
 
+use Stripe\Exception\ApiErrorException;
+use Stripe\Exception\CardException;
+use Stripe\Source;
+
 require_once dirname(__DIR__) . '/simplecart_stripe/shared.class.php';
 
 class SimpleCartStripeBancontactPaymentGateway extends SimpleCartStripeShared
@@ -27,7 +31,7 @@ class SimpleCartStripeBancontactPaymentGateway extends SimpleCartStripeShared
         $address = $this->order->getAddress();
         // Create a bancontact source
         try {
-            $source = \Stripe\Source::create([
+            $source = Source::create([
                 'amount' => $amount, // amount in cents
                 'currency' => $currency,
                 'statement_descriptor' => $description,
@@ -49,14 +53,14 @@ class SimpleCartStripeBancontactPaymentGateway extends SimpleCartStripeShared
             ]);
             $this->order->addLog('[Stripe] Bancontact Source', $source['id']);
             $this->order->save();
-        } catch (\Stripe\Error\Card $e) {
+        } catch (CardException $e) {
             // The card has been declined
             $this->order->addLog('[Stripe] Bancontact Declined', $e->getMessage());
             $this->order->set('status', 'payment_failed');
             $this->order->save();
 
             return false;
-        } catch (\Stripe\Error\Base $e) {
+        } catch (ApiErrorException $e) {
             $this->order->addLog('[Stripe] Bancontact Error', $e->getMessage());
             $this->order->set('status', 'payment_failed');
             $this->order->save();
